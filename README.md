@@ -12,3 +12,5 @@
 ##### Running the app
 The whole app will can be run using one command. To start the app, run the following command from the root of the project.
 `npm run start`
+
+# so i can push
