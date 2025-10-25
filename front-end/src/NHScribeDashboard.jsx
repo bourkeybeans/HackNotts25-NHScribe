@@ -1,7 +1,7 @@
 import React from "react";
 import './NHScribeDashboard.css';
 import Nhscribe from './assets/Nhscribe.png';
-
+import { useNavigate } from "react-router-dom";
 
 const topStats = [
   { title: "Current Queue", value: "0 pending", icon: "🕒" },
@@ -24,6 +24,7 @@ function ApprovedBadge() {
 }
 
 export default function NHScribeDashboard() {
+  const navigate = useNavigate();
   return (
     <div className="page">
       <header className="nav">
@@ -60,7 +61,7 @@ export default function NHScribeDashboard() {
             <h2>Ready to generate a new letter?</h2>
             <p>Create professional patient results letters in seconds with local AI processing</p>
           </div>
-          <button className="btn" onClick={() => alert('New Letter')}>➕ New Letter</button>
+          <button className="btn" onClick={() => navigate("/new-letter")}>➕ New Letter</button>
         </section>
 
         <section className="table-wrap">
