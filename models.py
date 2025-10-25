@@ -1,5 +1,8 @@
 from sqlalchemy import Column, Integer, String, Text, ForeignKey, CheckConstraint
 from sqlalchemy.orm import relationship, declarative_base
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text
+from sqlalchemy.orm import relationship
+from datetime import datetime
 
 Base = declarative_base()
 
@@ -29,3 +32,19 @@ class Results(Base):
     batch_id = Column(String)
 
     patient = relationship("Patient", back_populates="results")
+    letters = relationship("Letter", back_populates="patient")
+
+
+class Letter(Base):
+    __tablename__ = "letters"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
+    doctor_name = Column(String, nullable=True)
+    details = Column(String, nullable=True)
+    status = Column(String, default="Draft")
+    letter_uid = Column(String, unique=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    approved_at = Column(DateTime, nullable=True)
+    content = Column(Text, nullable=True)
+    file_path = Column(String, nullable=True)
+    patient = relationship("Patient", back_populates="letters")
