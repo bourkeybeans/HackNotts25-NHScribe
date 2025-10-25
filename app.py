@@ -177,7 +177,6 @@ async def upload_results(
 @app.get("/letters/recent")
 def get_recent_letters(db: Session = Depends(get_db)):
     letters = db.query(Letter).order_by(Letter.created_at.desc()).limit(10).all()
-
     return [
         {
             "id": l.letter_uid,
@@ -191,6 +190,45 @@ def get_recent_letters(db: Session = Depends(get_db)):
         }
         for l in letters
     ]
+
+from pydantic import BaseModel
+from datetime import datetime
+
+class StatusUpdate(BaseModel):
+    new_status: str
+
+@app.patch("/letters/{letter_uid}/status")
+def update_letter_status(
+    letter_uid: str,
+    body: StatusUpdate,
+    db: Session = Depends(get_db)
+):
+    letter = db.query(Letter).filter(Letter.letter_uid == letter_uid).first()
+    if not letter:
+        raise HTTPException(status_code=404, detail="Letter not found")
+
+    allowed = {"Draft", "Approved", "Rejected"}
+    new_status = body.new_status
+    if new_status not in allowed:
+        raise HTTPException(status_code=400, detail=f"Invalid status '{new_status}'")
+
+    # ✅ update both status and approval timestamp
+    letter.status = new_status
+    letter.approved_at = datetime.utcnow() if new_status == "Approved" else None
+
+    db.add(letter)
+    db.commit()
+    db.refresh(letter)
+
+    return {
+        "id": letter.letter_uid,
+        "status": letter.status,
+        "approvedAt": (
+            letter.approved_at.strftime("%Y-%m-%d %H:%M")
+            if letter.approved_at else None
+        ),
+    }
+
 
 
 if __name__ == "__main__":
