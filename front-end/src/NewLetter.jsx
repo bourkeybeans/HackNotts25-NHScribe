@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import "./NHScribeDashboard.css";
 import "./NewLetter.css";
 import Nhscribe from "./assets/Nhscribe.png";
@@ -37,6 +37,13 @@ export default function NewLetter() {
     () => !form.testType && !form.rawData && !form.notes,
     [form]
   );
+
+  // Load existing results when patient is found/created
+  useEffect(() => {
+    if (form.patientId && checkStatus === "found") {
+      loadPatientResults();
+    }
+  }, [form.patientId, checkStatus]);
 
   // ---- Helpers ----
   const norm = (s) => (s || "").trim().toLowerCase();
@@ -161,8 +168,9 @@ export default function NewLetter() {
       }
 
       setCsvResponse(data);
-      setCsvStatus(`Uploaded ${data?.results?.length || 0} results (batch ${data?.batch_id}).`);
-      // Optionally surface results into preview:
+      setCsvStatus(`✅ Uploaded ${data?.results?.length || 0} results (batch ${data?.batch_id}).`);
+      
+      // Auto-populate the form with CSV data if rawData is empty
       if (!form.rawData && data?.results?.length) {
         const summary = data.results
           .map((r) => {
@@ -173,8 +181,26 @@ export default function NewLetter() {
         setForm((f) => ({ ...f, testType: f.testType || "CSV", rawData: summary }));
       }
     } catch (e) {
-      console.error(e);
-      setCsvStatus(e.message || "Error uploading CSV.");
+      console.error("CSV upload error:", e);
+      setCsvStatus(`❌ ${e.message || "Error uploading CSV."}`);
+    }
+  }
+
+  // ---- Load existing results for patient ----
+  async function loadPatientResults() {
+    if (!form.patientId) return;
+    
+    try {
+      const res = await fetch(`http://localhost:8000/patients/${form.patientId}/results/`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.results?.length > 0) {
+          setCsvResponse({ results: data.results });
+          setCsvStatus(`📊 Loaded ${data.results.length} existing results for this patient.`);
+        }
+      }
+    } catch (e) {
+      console.error("Error loading patient results:", e);
     }
   }
 
@@ -328,7 +354,7 @@ export default function NewLetter() {
             {/* Optional CSV upload UI */}
             {form.testType === "CSV" && (
               <div style={{ marginTop: 8 }}>
-                <label className="label">Upload CSV Results</label>
+                <label className="label">CSV Results</label>
                 <input
                   className="input"
                   type="file"
@@ -340,9 +366,18 @@ export default function NewLetter() {
                     className="btn"
                     type="button"
                     onClick={handleUploadCsv}
-                    disabled={!form.patientId}
+                    disabled={!form.patientId || !csvFile}
                   >
                     ⬆ Upload CSV to Patient
+                  </button>
+                  <button
+                    className="btn"
+                    type="button"
+                    onClick={loadPatientResults}
+                    disabled={!form.patientId}
+                    style={{ marginLeft: 8 }}
+                  >
+                    📊 Load Existing Results
                   </button>
                   {!form.patientId && (
                     <span className="help" style={{ marginLeft: 8 }}>

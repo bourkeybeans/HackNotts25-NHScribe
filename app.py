@@ -86,7 +86,7 @@ def search_patients(
 
 @app.post("/upload-results/")
 async def upload_results(
-    patient_id: int,
+    patient_id: int = Form(...),
     file: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
@@ -168,6 +168,41 @@ async def upload_results(
                 "reference_high": r.reference_high,
                 "source_file": r.source_file,
                 "batch_id": r.batch_id,
+            }
+            for r in results
+        ],
+    }
+
+
+@app.get("/patients/{patient_id}/results/")
+def get_patient_results(patient_id: int, db: Session = Depends(get_db)):
+    """Get all test results for a specific patient."""
+    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    
+    results = db.query(Results).filter(Results.patient_id == patient_id).all()
+    
+    return {
+        "patient": {
+            "id": patient.id,
+            "name": patient.name,
+            "age": patient.age,
+            "sex": patient.sex,
+            "address": patient.address,
+            "conditions": patient.conditions,
+        },
+        "results": [
+            {
+                "test_name": r.test_name,
+                "value": r.value,
+                "unit": r.unit,
+                "flag": r.flag,
+                "reference_low": r.reference_low,
+                "reference_high": r.reference_high,
+                "source_file": r.source_file,
+                "batch_id": r.batch_id,
+                "created_at": None,  # Results table doesn't have created_at field
             }
             for r in results
         ],
