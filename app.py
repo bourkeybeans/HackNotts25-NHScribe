@@ -2,24 +2,28 @@ from fastapi import FastAPI, Depends, HTTPException, File, UploadFile
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from models import Base, Patient, Results
-import uuid, csv
-from datetime import datetime
+import uuid, csv, io, os
 
-# --- Database setup ---
-DATABASE_URL = "sqlite:///./scribe.db"
+# --- Absolute database path ---
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATABASE_URL = f"sqlite:///{os.path.join(BASE_DIR, 'scribe.db')}"
 
+# --- Engine with debug logging ---
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False}
+    connect_args={"check_same_thread": False},
+    echo=False  # set True for debugging SQL statements
 )
+
+# --- Session factory ---
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
+# --- Ensure all tables exist ---
 Base.metadata.create_all(bind=engine)
 
 # --- FastAPI app ---
 app = FastAPI(title="Pi-Scribe API")
 
-# --- Dependency ---
 def get_db():
     db = SessionLocal()
     try:
@@ -27,8 +31,6 @@ def get_db():
     finally:
         db.close()
 
-
-# --- Routes ---
 
 @app.post("/patients/")
 def create_patient(
@@ -39,14 +41,7 @@ def create_patient(
     conditions: str = "",
     db: Session = Depends(get_db)
 ):
-    """Create a new patient record."""
-    patient = Patient(
-        name=name,
-        age=age,
-        sex=sex,
-        address=address,
-        conditions=conditions
-    )
+    patient = Patient(name=name, age=age, sex=sex, address=address, conditions=conditions)
     db.add(patient)
     db.commit()
     db.refresh(patient)
@@ -55,9 +50,7 @@ def create_patient(
 
 @app.get("/patients/")
 def list_patients(db: Session = Depends(get_db)):
-    """Return all patients."""
-    patients = db.query(Patient).all()
-    return patients
+    return db.query(Patient).all()
 
 
 @app.post("/upload-results/")
@@ -67,39 +60,37 @@ async def upload_results(
     db: Session = Depends(get_db)
 ):
     """Upload a CSV of test results for a specific patient."""
-    # 1. Ensure the patient exists
+
     patient = db.query(Patient).filter(Patient.id == patient_id).first()
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
 
-    # 2. Read file contents
     contents = await file.read()
-    if not contents:
+    decoded = contents.decode("utf-8-sig").strip()
+    if not decoded:
         raise HTTPException(status_code=400, detail="Empty file uploaded")
 
+    reader = csv.DictReader(io.StringIO(decoded))
     batch_id = str(uuid.uuid4())
-    lines = contents.decode("utf-8").splitlines()
-    reader = csv.DictReader(lines)
+    inserted = 0
 
-    # 3. Parse each row safely
     for row in reader:
         row = {k.strip().lower(): v.strip() for k, v in row.items() if k}
 
-        test_name = row.get("test name")
-        value = row.get("result")
-        unit = row.get("units")
-        flag = row.get("flag")
+        test_name = row.get("test name") or row.get("test") or ""
+        value = row.get("result") or row.get("value") or ""
+        unit = row.get("units", "")
+        flag = row.get("flag", "")
         ref = row.get("reference range", "")
 
-        # split 115-165 into low/high if available
+        if not test_name or not value:
+            continue
+
         ref_low, ref_high = None, None
         if "-" in ref:
             parts = [p.strip() for p in ref.split("-", 1)]
             if len(parts) == 2:
                 ref_low, ref_high = parts
-
-        if not test_name or not value:
-            continue  # skip incomplete rows
 
         result = Results(
             patient_id=patient_id,
@@ -113,14 +104,17 @@ async def upload_results(
             batch_id=batch_id,
         )
         db.add(result)
+        inserted += 1
 
     db.commit()
 
-    # 4. Fetch results for response
     results = db.query(Results).filter(
         Results.patient_id == patient_id,
         Results.batch_id == batch_id
     ).all()
+
+    if not results:
+        raise HTTPException(status_code=400, detail="No valid result rows found in CSV")
 
     return {
         "status": "success",
