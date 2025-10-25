@@ -277,7 +277,7 @@ export default function NewLetter() {
 
             <div className="lookup-actions">
               <button type="button" className="btn primary" onClick={handleCheckPatient}>
-                ✅ Check Patient
+                Check Patient
               </button>
               <button type="button" className="btn" onClick={handleCreatePatient}>
                 ➕ Create New Patient
@@ -394,7 +394,7 @@ export default function NewLetter() {
 
             <div className="actions">
               <button className="btn primary" disabled={!form.patientId}>
-                🧠 Generate Letter
+                Generate Letter
               </button>
               {!form.patientId && (
                 <span className="help" style={{ marginLeft: 8 }}>
