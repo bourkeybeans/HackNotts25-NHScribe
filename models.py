@@ -1,48 +1,31 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, CheckConstraint
-from sqlalchemy.orm import declarative_base, relationship
-from datetime import datetime
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, CheckConstraint
+from sqlalchemy.orm import relationship, declarative_base
 
 Base = declarative_base()
 
 class Patient(Base):
     __tablename__ = "patients"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    forename = Column(String, nullable=False)
-    surname = Column(String, nullable=False)
+    name = Column(String, nullable=False)
     address = Column(Text)
     age = Column(Integer)
     sex = Column(String, CheckConstraint("sex IN ('M','F','Other')"))
     conditions = Column(Text)
 
-    letters = relationship("Letter", back_populates="patient", cascade="all, delete")
-
-class Letter(Base):
-    __tablename__ = "letters"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    patient_id = Column(Integer, ForeignKey("patients.id", ondelete="CASCADE"), nullable=False)
-    doctor_name = Column(String)
-    letter_date = Column(DateTime, default=datetime.utcnow)
-    approval_status = Column(String, CheckConstraint(
-        "approval_status IN ('draft','pending','approved','rejected')"
-    ), default="draft")
-    raw_text = Column(Text)
-    results_csv = Column(Text)
-    approved_at = Column(DateTime)
-    comments = Column(Text)
-
-    patient = relationship("Patient", back_populates="letters")
+    # optional relationships
+    results = relationship("Results", back_populates="patient")
 
 class Results(Base):
     __tablename__ = "results"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    patient_id = Column(Integer, ForeignKey("patients.id", ondelete="CASCADE"), nullable=False)
-    test_name = Column(String, nullable=False)
-    value = Column(String, nullable=False)
+    patient_id = Column(Integer, ForeignKey("patients.id"))
+    test_name = Column(String)
+    value = Column(String)
     unit = Column(String)
-    flag = Column(String)  # 'normal', 'low', 'high', 'abnormal'
-    reference_low = Column(String)  # optional for LLM summaries
+    flag = Column(String)
+    reference_low = Column(String)
     reference_high = Column(String)
-    collected_at = Column(DateTime, default=datetime.utcnow)
     source_file = Column(String)
     batch_id = Column(String)
-    
+
+    patient = relationship("Patient", back_populates="results")
