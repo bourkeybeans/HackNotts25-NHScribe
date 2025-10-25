@@ -34,7 +34,7 @@ test_data = {
 }
 
 # Generate dynamic text
-letter_content = generate_letter_content(test_data, "llama3")
+letter_content = generate_letter_content(test_data, "llama3.2:1b")
 
 # Create a canvas
 c = canvas.Canvas(file_name, pagesize=LETTER)

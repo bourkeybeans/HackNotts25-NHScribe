@@ -9,8 +9,6 @@ def generate_letter_content(letter_data: dict, llama_model: str = "llama3.2:1b")
 
     patient = letter_data["patient"]
     results = letter_data["results"]
-    print(patient)
-    print(results)
 
     sex = patient["sex"]
 
@@ -37,6 +35,7 @@ def generate_letter_content(letter_data: dict, llama_model: str = "llama3.2:1b")
     Only return the completed letter — no JSON, no code, no notes.
     """
 
+    print("Generating letter content...")
     response = llama_client.generate(model=llama_model, prompt=prompt)
 
     return response.response
