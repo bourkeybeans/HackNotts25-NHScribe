@@ -1,23 +1,15 @@
-import React from "react";
-import './NHScribeDashboard.css';
-import Nhscribe from './assets/Nhscribe.png';
+import { useState, useEffect } from "react";
+import "./NHScribeDashboard.css";
+import Nhscribe from "./assets/Nhscribe.png";
 import { useNavigate } from "react-router-dom";
 
 const topStats = [
   { title: "Current Queue", value: "0 pending", icon: "🕒" },
 ];
 
-const recentLetters = [
-{ id: "L2025-1023", patientId: "PT-4892", doctorName: "Dr. Sarah Lang", status: "Approved", details: "Blood Test - Full Panel", time: "09:30", date: "2025-10-25", approvedAt: "09:35" },
-{ id: "L2025-1024", patientId: "PT-3421", doctorName: "Dr. Michael Harris", status: "Approved", details: "X-Ray - Chest", time: "10:15", date: "2025-10-25", approvedAt: "10:20" },
-{ id: "L2025-1025", patientId: "PT-5678", doctorName: "Dr. Priya Nair", status: "Approved", details: "MRI - Brain", time: "11:00", date: "2025-10-25", approvedAt: "11:05" },
-];
-
 function Pill({ label, variant }) {
   return <span className={`pill ${variant || "default"}`}>{label}</span>;
 }
-
-
 
 function ApprovedBadge() {
   return <span className="badge success">✔ Approved</span>;
@@ -25,12 +17,35 @@ function ApprovedBadge() {
 
 export default function NHScribeDashboard() {
   const navigate = useNavigate();
+
+  const [recentLetters, setRecentLetters] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+useEffect(() => {
+  async function fetchLetters() {
+    try {
+      const res = await fetch("http://localhost:8000/letters/recent");
+      console.log("Response object:", res);
+      if (!res.ok) throw new Error("Failed to fetch letters");
+      const data = await res.json();
+      console.log("Fetched letters:", data);
+      setRecentLetters(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Error fetching letters:", err);
+      setRecentLetters([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+  fetchLetters();
+}, []);
+
   return (
     <div className="page">
       <header className="nav">
         <div className="container nav-inner">
           <div className="brand">
-            <div className="Nhscribe"><img src={Nhscribe} alt="Nhscribe" className="Nhscribe" /></div>
+            <img src={Nhscribe} alt="Nhscribe" className="Nhscribe" />
             <div>
               <div className="title">NHScribe</div>
               <div className="subtitle">AI Medical Letter Assistant</div>
@@ -43,7 +58,9 @@ export default function NHScribeDashboard() {
         </div>
       </header>
       <br></br>
+
       <main className="container">
+        {/* --- Stats section --- */}
         <section className="stats">
           {topStats.map((s, i) => (
             <div className="card" key={i}>
@@ -56,45 +73,61 @@ export default function NHScribeDashboard() {
           ))}
         </section>
 
+        {/* --- Call to action --- */}
         <section className="cta">
           <div>
             <h2>Ready to generate a new letter?</h2>
-            <p>Create professional patient results letters in seconds with local AI processing</p>
+            <p>Create professional patient results letters in seconds with local AI processing.</p>
           </div>
-          <button className="btn" onClick={() => navigate("/new-letter")}>➕ New Letter</button>
+          <button className="btn" onClick={() => navigate("/new-letter")}>
+            ➕ New Letter
+          </button>
         </section>
 
+        {/* --- Recent Letters Table --- */}
         <section className="table-wrap">
           <div className="table-head">Recent Letters</div>
           <div className="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>Letter ID</th>
-                  <th>Patient ID</th>
-                  <th>Doctor Name</th>
-                  <th>Status</th>
-                  <th>Details</th>
-                  <th>Time</th>
-                  <th>Date</th>
-                  <th>Approved At</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentLetters.map((row) => (
-                  <tr key={row.id}>
-                    <td className="bold">{row.id}</td>
-                    <td>{row.patientId}</td>
-                    <td>{row.doctorName}</td>
-                    <td><ApprovedBadge /></td>
-                    <td>{row.details}</td>
-                    <td>{row.time}</td>
-                    <td>{row.date}</td>
-                    <td>{row.approvedAt}</td>
+            {loading ? (
+              <div className="table-placeholder">
+                <div className="emoji">⏳</div>
+                <div className="message">Loading recent letters...</div>
+              </div>
+            ) : recentLetters.length === 0 ? (
+              <div className="table-placeholder">
+                <div className="emoji">📭</div>
+                <div className="message">No letters currently need approval.</div>
+              </div>
+            ) : (
+              <table>
+                <thead>
+                  <tr>
+                    <th>Letter ID</th>
+                    <th>Patient ID</th>
+                    <th>Doctor Name</th>
+                    <th>Status</th>
+                    <th>Details</th>
+                    <th>Time</th>
+                    <th>Date</th>
+                    <th>Approved At</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {recentLetters.map((row) => (
+                    <tr key={row.id}>
+                      <td className="bold">{row.id}</td>
+                      <td>{row.patientId}</td>
+                      <td>{row.doctorName}</td>
+                      <td><ApprovedBadge /></td>
+                      <td>{row.details}</td>
+                      <td>{row.time}</td>
+                      <td>{row.date}</td>
+                      <td>{row.approvedAt || "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </section>
       </main>

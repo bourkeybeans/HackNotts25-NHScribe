@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
-from models import Base, Patient, Results
+from models import Base, Patient, Results, Letter
 import uuid, csv, io, os
 import uvicorn
 
@@ -172,6 +172,24 @@ async def upload_results(
             for r in results
         ],
     }
+
+@app.get("/letters/recent")
+def get_recent_letters(db: Session = Depends(get_db)):
+    letters = db.query(Letter).order_by(Letter.created_at.desc()).limit(10).all()
+
+    return [
+        {
+            "id": l.letter_uid,
+            "patientId": f"PT-{l.patient_id:04d}",
+            "doctorName": l.doctor_name,
+            "status": l.status,
+            "details": l.details,
+            "time": l.created_at.strftime("%H:%M"),
+            "date": l.created_at.strftime("%Y-%m-%d"),
+            "approvedAt": l.approved_at.strftime("%H:%M") if l.approved_at else None
+        }
+        for l in letters
+    ]
 
 
 if __name__ == "__main__":
