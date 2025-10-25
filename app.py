@@ -86,7 +86,7 @@ def search_patients(
 
 @app.post("/upload-results/")
 async def upload_results(
-    patient_id: int,
+    patient_id: int = Form(...),  
     file: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):

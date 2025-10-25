@@ -16,7 +16,7 @@ export default function NewLetter() {
     sex: "",
     conditions: "",
     // letter fields
-    testType: "",
+    testType: "", // "Text" | "CSV"
     rawData: "",
     urgency: "Routine",
     notes: "",
@@ -24,35 +24,42 @@ export default function NewLetter() {
 
   const [checkStatus, setCheckStatus] = useState(null); // "found" | "not_found" | "error" | null
   const [checkMessage, setCheckMessage] = useState("");
+
+  // CSV upload state
   const [csvFile, setCsvFile] = useState(null);
-  const [csvStatus, setCsvStatus] = useState("");
-  const [csvResponse, setCsvResponse] = useState(null);
+  const [csvStatus, setCsvStatus] = useState("");        // status message
+  const [csvResponse, setCsvResponse] = useState(null);  // server JSON on success
 
   const onChange = (e) => {
     const { name, value } = e.target;
     setForm((f) => ({ ...f, [name]: value }));
+    // Reset CSV preview if switching data type
+    if (name === "testType" && value !== "CSV") {
+      setCsvFile(null);
+      setCsvResponse(null);
+      setCsvStatus("");
+    }
   };
 
-  const previewEmpty = useMemo(
-    () => !form.testType && !form.rawData && !form.notes,
-    [form]
-  );
+  const previewEmpty = useMemo(() => {
+    // If CSV is selected, preview is empty until we have a server response
+    if (form.testType === "CSV") return !csvResponse && !form.notes;
+    // Text mode uses rawData/notes
+    return !form.testType && !form.rawData && !form.notes;
+  }, [form, csvResponse]);
 
-  // ---- Helpers ----
   const norm = (s) => (s || "").trim().toLowerCase();
 
-  // ---- Handlers for patient lookup using your FastAPI routes ----
+  // ---- Patient lookup ----
   async function handleCheckPatient() {
     try {
       setCheckStatus(null);
       setCheckMessage("Checking…");
 
-      // GET /patients/
       const res = await fetch("http://localhost:8000/patients/");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const patients = await res.json();
 
-      // Matching: name exact (case-insensitive), age exact (if given), address contains (if given)
       const nameQ = norm(form.name);
       const ageQ = form.age ? Number(form.age) : null;
       const addrQ = norm(form.address);
@@ -87,8 +94,8 @@ export default function NewLetter() {
     }
   }
 
+  // ---- Create new patient ----
   async function handleCreatePatient() {
-    // Validate to respect DB constraints
     if (!form.name?.trim()) {
       setCheckStatus("error");
       setCheckMessage("Please enter at least a Name to create a patient.");
@@ -101,7 +108,6 @@ export default function NewLetter() {
     }
 
     try {
-      // FastAPI function signature expects form-encoded fields
       const body = new URLSearchParams();
       body.set("name", form.name.trim());
       if (form.age) body.set("age", String(Number(form.age)));
@@ -131,23 +137,23 @@ export default function NewLetter() {
     }
   }
 
-  // ---- Optional CSV upload (uses your /upload-results/ route) ----
-  async function handleUploadCsv() {
-    if (!form.patientId) {
-      setCsvStatus("Please Check/Create a patient first.");
-      return;
-    }
-    if (!csvFile) {
-      setCsvStatus("Please choose a CSV file to upload.");
-      return;
-    }
-
+  // ---- Upload CSV to /upload-results/ ----
+  async function handleUploadCSV() {
     try {
-      setCsvStatus("Uploading…");
+      setCsvStatus("");
       setCsvResponse(null);
 
+      if (!form.patientId) {
+        setCsvStatus("Please select or create a patient first (Patient ID required).");
+        return;
+      }
+      if (!csvFile) {
+        setCsvStatus("Please choose a CSV file to upload.");
+        return;
+      }
+
       const fd = new FormData();
-      fd.append("patient_id", form.patientId);
+      fd.append("patient_id", String(Number(form.patientId)));
       fd.append("file", csvFile);
 
       const res = await fetch("http://localhost:8000/upload-results/", {
@@ -155,26 +161,17 @@ export default function NewLetter() {
         body: fd,
       });
 
-      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(data?.detail || `Upload failed (HTTP ${res.status})`);
+        const msg = await res.text();
+        throw new Error(msg || `HTTP ${res.status}`);
       }
 
+      const data = await res.json();
       setCsvResponse(data);
-      setCsvStatus(`Uploaded ${data?.results?.length || 0} results (batch ${data?.batch_id}).`);
-      // Optionally surface results into preview:
-      if (!form.rawData && data?.results?.length) {
-        const summary = data.results
-          .map((r) => {
-            const ref = [r.reference_low, r.reference_high].filter(Boolean).join(" - ");
-            return `${r.test_name}: ${r.value}${r.unit ? " " + r.unit : ""}${ref ? ` (Ref: ${ref})` : ""}${r.flag ? ` [${r.flag}]` : ""}`;
-          })
-          .join("\n");
-        setForm((f) => ({ ...f, testType: f.testType || "CSV", rawData: summary }));
-      }
-    } catch (e) {
-      console.error(e);
-      setCsvStatus(e.message || "Error uploading CSV.");
+      setCsvStatus(`Uploaded ${csvFile.name} • ${data.results?.length || 0} results saved • batch ${data.batch_id}`);
+    } catch (err) {
+      console.error(err);
+      setCsvStatus("Upload failed. Please confirm CSV format and try again.");
     }
   }
 
@@ -206,7 +203,6 @@ export default function NewLetter() {
             <h2>Letter Details</h2>
           </div>
           <div className="panel-body">
-            {/* --- Patient Lookup Block --- */}
             <div className="block-title">Patient Search</div>
             <div className="patient-grid">
               <div>
@@ -298,7 +294,6 @@ export default function NewLetter() {
               )}
             </div>
 
-            {/* --- Patient ID (read-only) --- */}
             <label className="label">Patient ID</label>
             <input
               className="input disabled"
@@ -309,7 +304,6 @@ export default function NewLetter() {
             />
             <div className="help">Auto-populated from hospital system</div>
 
-            {/* --- Letter fields --- */}
             <label className="label" style={{ marginTop: 16 }}>Data Type</label>
             <div className="select-wrap">
               <select
@@ -325,24 +319,42 @@ export default function NewLetter() {
               <span className="select-caret">▾</span>
             </div>
 
-            {/* Optional CSV upload UI */}
+            {/* Text mode */}
+            {form.testType === "Text" && (
+              <>
+                <label className="label">Raw Results Data</label>
+                <textarea
+                  className="input textarea"
+                  rows={5}
+                  name="rawData"
+                  placeholder="Enter lab values, observations, measurements..."
+                  value={form.rawData}
+                  onChange={onChange}
+                />
+              </>
+            )}
+
+            {/* CSV mode */}
             {form.testType === "CSV" && (
-              <div style={{ marginTop: 8 }}>
+              <>
                 <label className="label">Upload CSV Results</label>
                 <input
-                  className="input"
                   type="file"
                   accept=".csv,text/csv"
+                  className="input"
                   onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
                 />
-                <div className="actions" style={{ marginTop: 8 }}>
+                <div className="help">
+                  Expected columns (case-insensitive): <em>Test Name/Test</em>, <em>Result/Value</em>, optional <em>Units</em>, <em>Flag</em>, <em>Reference Range</em>.
+                </div>
+                <div className="actions">
                   <button
-                    className="btn"
                     type="button"
-                    onClick={handleUploadCsv}
-                    disabled={!form.patientId}
+                    className="btn primary"
+                    onClick={handleUploadCSV}
+                    disabled={!form.patientId || !csvFile}
                   >
-                    ⬆ Upload CSV to Patient
+                    ⬆ Upload to Patient
                   </button>
                   {!form.patientId && (
                     <span className="help" style={{ marginLeft: 8 }}>
@@ -350,19 +362,13 @@ export default function NewLetter() {
                     </span>
                   )}
                 </div>
-                {csvStatus && <div className="help" style={{ marginTop: 6 }}>{csvStatus}</div>}
-              </div>
+                {csvStatus && (
+                  <div className="help" style={{ marginTop: 8 }}>
+                    {csvStatus}
+                  </div>
+                )}
+              </>
             )}
-
-            <label className="label">Raw Results Data</label>
-            <textarea
-              className="input textarea"
-              rows={5}
-              name="rawData"
-              placeholder="Enter lab values, observations, measurements..."
-              value={form.rawData}
-              onChange={onChange}
-            />
 
             <label className="label">Urgency Level</label>
             <div className="urgency-row">
@@ -426,37 +432,56 @@ export default function NewLetter() {
                 </p>
                 <p><strong>Data Type:</strong> {form.testType || "—"}</p>
                 <p><strong>Urgency:</strong> {form.urgency}</p>
-                {form.rawData && (
+
+                {/* Results area */}
+                {form.testType === "Text" && form.rawData && (
                   <>
                     <h4>Results Summary</h4>
                     <pre className="pre">{form.rawData}</pre>
                   </>
                 )}
+
+                {form.testType === "CSV" && csvResponse && (
+                  <>
+                    <h4>Results Summary (CSV batch)</h4>
+                    <p className="muted">
+                      Batch: <code>{csvResponse.batch_id}</code> • Source: <code>{csvResponse.results?.[0]?.source_file || csvFile?.name}</code>
+                    </p>
+                    <div className="table-scroll" style={{ border: "1px solid #e5e7eb", borderRadius: 10 }}>
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>Test</th>
+                            <th>Value</th>
+                            <th>Unit</th>
+                            <th>Flag</th>
+                            <th>Ref Low</th>
+                            <th>Ref High</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {csvResponse.results.map((r, idx) => (
+                            <tr key={idx}>
+                              <td className="bold">{r.test_name}</td>
+                              <td>{r.value}</td>
+                              <td>{r.unit || "—"}</td>
+                              <td>{r.flag || "—"}</td>
+                              <td>{r.reference_low || "—"}</td>
+                              <td>{r.reference_high || "—"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                )}
+
                 {form.notes && (
                   <>
                     <h4>Clinician Notes</h4>
                     <p>{form.notes}</p>
                   </>
                 )}
-                {csvResponse?.results?.length ? (
-                  <>
-                    <h4>Uploaded Results (latest batch)</h4>
-                    <ul>
-                      {csvResponse.results.slice(0, 6).map((r, idx) => (
-                        <li key={idx}>
-                          {r.test_name}: {r.value}
-                          {r.unit ? ` ${r.unit}` : ""}{" "}
-                          {r.flag ? `[${r.flag}]` : ""}
-                        </li>
-                      ))}
-                    </ul>
-                    {csvResponse.results.length > 6 && (
-                      <div className="help">
-                        +{csvResponse.results.length - 6} more…
-                      </div>
-                    )}
-                  </>
-                ) : null}
               </article>
             )}
           </div>
