@@ -7,7 +7,8 @@ Base = declarative_base()
 class Patient(Base):
     __tablename__ = "patients"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, nullable=False)
+    forename = Column(String, nullable=False)
+    surname = Column(String, nullable=False)
     address = Column(Text)
     age = Column(Integer)
     sex = Column(String, CheckConstraint("sex IN ('M','F','Other')"))
@@ -43,4 +44,5 @@ class Results(Base):
     reference_high = Column(String)
     collected_at = Column(DateTime, default=datetime.utcnow)
     source_file = Column(String)
+    batch_id = Column(String)
     

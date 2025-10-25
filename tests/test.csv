@@ -1,0 +1,25 @@
+PT001,Jane Doe,1969-02-15,F,2025-10-20,Haemoglobin,118,g/L,115-165,Low
+PT001,Jane Doe,1969-02-15,F,2025-10-20,White Blood Cells,7.8,x10^9/L,4.0-11.0,Normal
+PT001,Jane Doe,1969-02-15,F,2025-10-20,Platelets,260,x10^9/L,150-450,Normal
+PT001,Jane Doe,1969-02-15,F,2025-10-20,Neutrophils,5.2,x10^9/L,2.0-7.5,Normal
+PT001,Jane Doe,1969-02-15,F,2025-10-20,Sodium,137,mmol/L,133-146,Normal
+PT001,Jane Doe,1969-02-15,F,2025-10-20,Potassium,4.1,mmol/L,3.5-5.3,Normal
+PT001,Jane Doe,1969-02-15,F,2025-10-20,Creatinine,78,µmol/L,45-84,Normal
+PT001,Jane Doe,1969-02-15,F,2025-10-20,CRP,3,mg/L,0-5,Normal
+PT002,John Smith,1989-07-04,M,2025-10-22,Haemoglobin,146,g/L,130-180,Normal
+PT002,John Smith,1989-07-04,M,2025-10-22,White Blood Cells,15.4,x10^9/L,4.0-11.0,High
+PT002,John Smith,1989-07-04,M,2025-10-22,Neutrophils,12.1,x10^9/L,2.0-7.5,High
+PT002,John Smith,1989-07-04,M,2025-10-22,CRP,78,mg/L,0-5,High
+PT003,Alan Turner,1962-03-08,M,2025-10-23,HbA1c,64,mmol/mol,20-48,High
+PT003,Alan Turner,1962-03-08,M,2025-10-23,Total Cholesterol,6.2,mmol/L,<5.0,High
+PT003,Alan Turner,1962-03-08,M,2025-10-23,HDL Cholesterol,0.9,mmol/L,>1.0,Low
+PT003,Alan Turner,1962-03-08,M,2025-10-23,LDL Cholesterol,4.0,mmol/L,<3.0,High
+PT003,Alan Turner,1962-03-08,M,2025-10-23,Triglycerides,2.1,mmol/L,<1.7,High
+PT004,Sarah Patel,1977-06-19,F,2025-10-24,ALT,78,U/L,<40,High
+PT004,Sarah Patel,1977-06-19,F,2025-10-24,AST,42,U/L,<40,High
+PT004,Sarah Patel,1977-06-19,F,2025-10-24,GGT,85,U/L,<60,High
+PT004,Sarah Patel,1977-06-19,F,2025-10-24,Bilirubin,10,µmol/L,0-21,Normal
+PT005,Margaret Lee,1950-11-28,F,2025-10-23,Sodium,137,mmol/L,133-146,Normal
+PT005,Margaret Lee,1950-11-28,F,2025-10-23,Potassium,5.4,mmol/L,3.5-5.3,High
+PT005,Margaret Lee,1950-11-28,F,2025-10-23,Creatinine,150,µmol/L,45-84,High
+PT005,Margaret Lee,1950-11-28,F,2025-10-23,Urea,9.8,mmol/L,2.5-7.8,High
