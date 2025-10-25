@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Letter - Farhan Shaikh</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', serif;
+            line-height: 1.6;
+            max-width: 8.5in;
+            margin: 0 auto;
+            padding: 1in;
+            background-color: #ffffff;
+            color: #000000;
+        }
+        
+        .letterhead {
+            border-bottom: 2px solid #003366;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .sender-info {
+            font-weight: bold;
+            font-size: 18px;
+            color: #003366;
+            margin-bottom: 5px;
+        }
+        
+        .sender-address {
+            font-size: 12px;
+            color: #666666;
+            margin-bottom: 10px;
+        }
+        
+        .date {
+            font-size: 12px;
+            margin-bottom: 30px;
+        }
+        
+        .recipient {
+            margin-bottom: 20px;
+        }
+        
+        .letter-body {
+            font-size: 12px;
+            white-space: pre-wrap;
+            margin-bottom: 30px;
+        }
+        
+        .signature {
+            margin-top: 40px;
+        }
+        
+        .signature-line {
+            margin-bottom: 5px;
+        }
+        
+        .signature-name {
+            font-weight: bold;
+        }
+        
+        .signature-title {
+            font-style: italic;
+            color: #666666;
+        }
+        
+        .download-section {
+            margin-top: 30px;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .download-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+            margin: 5px;
+            transition: background-color 0.2s;
+        }
+        
+        .download-btn:hover {
+            background: #c82333;
+        }
+        
+        .download-btn:visited {
+            color: white;
+        }
+        
+        /* Editable content styling */
+        .editable {
+            border: 1px solid transparent;
+            padding: 2px;
+            border-radius: 3px;
+            transition: border-color 0.2s;
+        }
+        
+        .editable:hover {
+            border-color: #cccccc;
+        }
+        
+        .editable:focus {
+            outline: none;
+            border-color: #007bff;
+            background-color: #f8f9fa;
+        }
+        
+        /* Print styles */
+        @media print {
+            body {
+                margin: 0;
+                padding: 0.5in;
+            }
+            .editable {
+                border: none;
+            }
+            .editable:hover {
+                border: none;
+            }
+        }
+    </style>
+</head>
+<body data-letter-id="16dda341">
+    <div class="letterhead">
+        <div class="sender-info">NHS</div>
+        <div class="sender-address">
+            123 Main Street<br>
+            Springfield, USA 12345
+        </div>
+    </div>
+    
+    <div class="date">October 25, 2025</div>
+    
+    <div class="recipient">
+        Dear Farhan Shaikh,
+    </div>
+    
+    <div class="letter-body editable" contenteditable="true" id="letter-content">
+Haemoglobin Test Results
+
+The haemoglobin test was performed to assess your red blood cell count. The result is as follows:
+
+Haemoglobin: 118 g/L
+Reference range: 115-165 g/L
+
+Your haemoglobin level is slightly lower than the normal range, which may indicate that you are not producing enough red blood cells or that your body is losing blood. This could be due to a variety of reasons, including anaemia, infection, or underlying medical conditions.
+
+If you have any concerns about this result, please speak with your doctor or healthcare provider for further guidance and recommendations.
+
+Please note that these results are intended for clinical use only and should not be shared without the patient's consent.
+
+
+
+yoooo
+    </div>
+    
+    <div class="signature">
+        <div class="signature-line">Sincerely,</div>
+        <div class="signature-name">Farhan</div>
+        <div class="signature-title">Unpaid Intern NHS</div>
+    </div>
+    
+    <div class="download-section">
+        <p><strong>Download Options:</strong></p>
+        <a href="/letters/16dda341/pdf" class="download-btn" target="_blank">
+            📄 Download PDF
+        </a>
+        <button class="download-btn" onclick="window.print()">
+            🖨️ Print Letter
+        </button>
+    </div>
+
+    <script>
+        // Auto-save functionality
+        let saveTimeout;
+        const letterContent = document.getElementById('letter-content');
+        
+        function autoSave() {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                // Send updated content to server
+                const updatedContent = letterContent.textContent;
+                
+                // Get letter ID from URL or data attribute
+                const letterId = document.body.getAttribute('data-letter-id');
+                if (letterId) {
+                    fetch(`/letters/${letterId}/content`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `content=${encodeURIComponent(updatedContent)}`
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Auto-saved:', data);
+                    })
+                    .catch(error => {
+                        console.error('Auto-save failed:', error);
+                    });
+                }
+            }, 2000); // Save after 2 seconds of inactivity
+        }
+        
+        // Add event listener for content changes
+        letterContent.addEventListener('input', autoSave);
+        
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl+S to save
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                autoSave();
+            }
+        });
+    </script>
+</body>
+</html>

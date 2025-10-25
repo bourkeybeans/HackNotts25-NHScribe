@@ -176,6 +176,7 @@ export default function NHScribeDashboard() {
                     <th>Time</th>
                     <th>Date</th>
                     <th>Approved At</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -201,6 +202,15 @@ export default function NHScribeDashboard() {
                         }}
                       >
                         {row.approvedAt || "—"}
+                      </td>
+                      <td>
+                        <button
+                          className="btn-link"
+                          onClick={() => navigate(`/review/${row.id}`)}
+                          title="Review and edit letter"
+                        >
+                          📝 Review
+                        </button>
                       </td>
                     </tr>
                   ))}
