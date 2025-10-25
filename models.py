@@ -17,6 +17,7 @@ class Patient(Base):
 
     # optional relationships
     results = relationship("Results", back_populates="patient")
+    letters = relationship("Letter")
 
 class Results(Base):
     __tablename__ = "results"
@@ -32,7 +33,6 @@ class Results(Base):
     batch_id = Column(String)
 
     patient = relationship("Patient", back_populates="results")
-    letters = relationship("Letter", back_populates="patient")
 
 
 class Letter(Base):
@@ -47,4 +47,4 @@ class Letter(Base):
     approved_at = Column(DateTime, nullable=True)
     content = Column(Text, nullable=True)
     file_path = Column(String, nullable=True)
-    patient = relationship("Patient", back_populates="letters")
+    patient = relationship("Patient")

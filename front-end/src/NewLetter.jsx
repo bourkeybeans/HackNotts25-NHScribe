@@ -48,7 +48,7 @@ export default function NewLetter() {
       setCheckMessage("Checking…");
 
       // GET /patients/
-      const res = await fetch("/patients/");
+      const res = await fetch("http://localhost:8000/patients/");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const patients = await res.json();
 
@@ -109,7 +109,7 @@ export default function NewLetter() {
       body.set("address", form.address?.trim() || "");
       body.set("conditions", form.conditions?.trim() || "");
 
-      const res = await fetch("/patients/", {
+      const res = await fetch("http://localhost:8000/patients/", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body,
@@ -150,7 +150,7 @@ export default function NewLetter() {
       fd.append("patient_id", form.patientId);
       fd.append("file", csvFile);
 
-      const res = await fetch("/upload-results/", {
+      const res = await fetch("http://localhost:8000/upload-results/", {
         method: "POST",
         body: fd,
       });
