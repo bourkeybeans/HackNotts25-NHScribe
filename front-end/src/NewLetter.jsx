@@ -4,51 +4,6 @@ import "./NewLetter.css";
 import Nhscribe from "./assets/Nhscribe.png";
 import { useNavigate } from "react-router-dom";
 
-/* ------------------------ TEMP LOCAL STORAGE LAYER -------------------------
-   Replace these functions with your real SQL calls later.
-   For now, they simulate a patient DB using localStorage.
------------------------------------------------------------------------------*/
-const LS_KEY = "nhscribe_patients";
-
-function loadPatients() {
-  try {
-    const raw = localStorage.getItem(LS_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-function savePatients(arr) {
-  localStorage.setItem(LS_KEY, JSON.stringify(arr));
-}
-function genPatientId() {
-  // simple readable id; replace with DB autoincrement id later
-  return `PT-${Math.random().toString(36).slice(2, 6).toUpperCase()}${Date.now()
-    .toString()
-    .slice(-3)}`;
-}
-// naive match: name + age (+ optional address substring)
-function findPatient({ name, age, address }) {
-  const all = loadPatients();
-  return all.find((p) => {
-    const nameMatch =
-      p.name?.trim().toLowerCase() === (name || "").trim().toLowerCase();
-    const ageMatch = Number(p.age) === Number(age);
-    const addressHint = (address || "").trim().toLowerCase();
-    const addressMatch = !addressHint || p.address?.toLowerCase().includes(addressHint);
-    return nameMatch && ageMatch && addressMatch;
-  });
-}
-function createPatient(p) {
-  const all = loadPatients();
-  const id = genPatientId();
-  const record = { ...p, id };
-  all.push(record);
-  savePatients(all);
-  return record;
-}
-/* --------------------------------------------------------------------------*/
-
 export default function NewLetter() {
   const navigate = useNavigate();
 
@@ -67,57 +22,73 @@ export default function NewLetter() {
     notes: "",
   });
 
-  const [checkStatus, setCheckStatus] = useState(null); // null | "found" | "not_found" | "error"
+  const [checkStatus, setCheckStatus] = useState(null); // "found" | "not_found" | "error" | null
   const [checkMessage, setCheckMessage] = useState("");
+  const [csvFile, setCsvFile] = useState(null);
+  const [csvStatus, setCsvStatus] = useState("");
+  const [csvResponse, setCsvResponse] = useState(null);
 
   const onChange = (e) => {
     const { name, value } = e.target;
     setForm((f) => ({ ...f, [name]: value }));
   };
 
-  const previewEmpty = useMemo(() => {
-    return !form.testType && !form.rawData && !form.notes;
-  }, [form]);
+  const previewEmpty = useMemo(
+    () => !form.testType && !form.rawData && !form.notes,
+    [form]
+  );
 
-  // ---- Handlers for patient lookup ----
+  // ---- Helpers ----
+  const norm = (s) => (s || "").trim().toLowerCase();
+
+  // ---- Handlers for patient lookup using your FastAPI routes ----
   async function handleCheckPatient() {
-    // PLACEHOLDER: replace this whole function with your SQL call.
-    // e.g. const res = await fetch('/api/patients/search', { method:'POST', body: JSON.stringify({name, age, address})})
     try {
       setCheckStatus(null);
-      setCheckMessage("Checking… (mock, replace with SQL later)");
+      setCheckMessage("Checking…");
 
-      const match = findPatient({
-        name: form.name,
-        age: form.age,
-        address: form.address,
+      // GET /patients/
+      const res = await fetch("/patients/");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const patients = await res.json();
+
+      // Matching: name exact (case-insensitive), age exact (if given), address contains (if given)
+      const nameQ = norm(form.name);
+      const ageQ = form.age ? Number(form.age) : null;
+      const addrQ = norm(form.address);
+
+      const match = patients.find((p) => {
+        const nameMatch = norm(p.name) === nameQ;
+        const ageMatch = ageQ === null || Number(p.age) === ageQ;
+        const addrMatch = !addrQ || norm(p.address || "").includes(addrQ);
+        return nameMatch && ageMatch && addrMatch;
       });
 
       if (match) {
         setForm((f) => ({
           ...f,
-          patientId: match.id,
-          // hydrate optional fields from DB
-          name: match.name || f.name,
-          address: match.address || f.address,
+          patientId: String(match.id),
+          name: match.name ?? f.name,
+          address: match.address ?? f.address,
           age: match.age ?? f.age,
-          sex: match.sex || f.sex,
-          conditions: match.conditions || f.conditions,
+          sex: match.sex ?? f.sex,
+          conditions: match.conditions ?? f.conditions,
         }));
         setCheckStatus("found");
-        setCheckMessage(`Patient found: ${match.name} (${match.id})`);
+        setCheckMessage(`Patient found: ${match.name} (ID ${match.id})`);
       } else {
         setCheckStatus("not_found");
         setCheckMessage("No matching patient found. You can create a new one.");
       }
     } catch (e) {
+      console.error(e);
       setCheckStatus("error");
-      setCheckMessage("Error checking patient (mock layer).");
+      setCheckMessage("Error checking patient. Please try again.");
     }
   }
 
-  function handleCreatePatient() {
-    // Minimal validation
+  async function handleCreatePatient() {
+    // Validate to respect DB constraints
     if (!form.name?.trim()) {
       setCheckStatus("error");
       setCheckMessage("Please enter at least a Name to create a patient.");
@@ -129,18 +100,82 @@ export default function NewLetter() {
       return;
     }
 
-    // PLACEHOLDER: Replace with SQL INSERT and returned id
-    const record = createPatient({
-      name: form.name.trim(),
-      address: form.address?.trim() || "",
-      age: form.age ? Number(form.age) : null,
-      sex: form.sex,
-      conditions: form.conditions?.trim() || "",
-    });
+    try {
+      // FastAPI function signature expects form-encoded fields
+      const body = new URLSearchParams();
+      body.set("name", form.name.trim());
+      if (form.age) body.set("age", String(Number(form.age)));
+      body.set("sex", form.sex);
+      body.set("address", form.address?.trim() || "");
+      body.set("conditions", form.conditions?.trim() || "");
 
-    setForm((f) => ({ ...f, patientId: record.id }));
-    setCheckStatus("found");
-    setCheckMessage(`New patient created: ${record.name} (${record.id})`);
+      const res = await fetch("/patients/", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body,
+      });
+
+      if (!res.ok) {
+        const msg = await res.text();
+        throw new Error(msg || `HTTP ${res.status}`);
+      }
+      const p = await res.json();
+
+      setForm((f) => ({ ...f, patientId: String(p.id) }));
+      setCheckStatus("found");
+      setCheckMessage(`New patient created: ${p.name} (ID ${p.id})`);
+    } catch (e) {
+      console.error(e);
+      setCheckStatus("error");
+      setCheckMessage("Error creating patient. Please review fields and try again.");
+    }
+  }
+
+  // ---- Optional CSV upload (uses your /upload-results/ route) ----
+  async function handleUploadCsv() {
+    if (!form.patientId) {
+      setCsvStatus("Please Check/Create a patient first.");
+      return;
+    }
+    if (!csvFile) {
+      setCsvStatus("Please choose a CSV file to upload.");
+      return;
+    }
+
+    try {
+      setCsvStatus("Uploading…");
+      setCsvResponse(null);
+
+      const fd = new FormData();
+      fd.append("patient_id", form.patientId);
+      fd.append("file", csvFile);
+
+      const res = await fetch("/upload-results/", {
+        method: "POST",
+        body: fd,
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data?.detail || `Upload failed (HTTP ${res.status})`);
+      }
+
+      setCsvResponse(data);
+      setCsvStatus(`Uploaded ${data?.results?.length || 0} results (batch ${data?.batch_id}).`);
+      // Optionally surface results into preview:
+      if (!form.rawData && data?.results?.length) {
+        const summary = data.results
+          .map((r) => {
+            const ref = [r.reference_low, r.reference_high].filter(Boolean).join(" - ");
+            return `${r.test_name}: ${r.value}${r.unit ? " " + r.unit : ""}${ref ? ` (Ref: ${ref})` : ""}${r.flag ? ` [${r.flag}]` : ""}`;
+          })
+          .join("\n");
+        setForm((f) => ({ ...f, testType: f.testType || "CSV", rawData: summary }));
+      }
+    } catch (e) {
+      console.error(e);
+      setCsvStatus(e.message || "Error uploading CSV.");
+    }
   }
 
   return (
@@ -290,6 +325,35 @@ export default function NewLetter() {
               <span className="select-caret">▾</span>
             </div>
 
+            {/* Optional CSV upload UI */}
+            {form.testType === "CSV" && (
+              <div style={{ marginTop: 8 }}>
+                <label className="label">Upload CSV Results</label>
+                <input
+                  className="input"
+                  type="file"
+                  accept=".csv,text/csv"
+                  onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
+                />
+                <div className="actions" style={{ marginTop: 8 }}>
+                  <button
+                    className="btn"
+                    type="button"
+                    onClick={handleUploadCsv}
+                    disabled={!form.patientId}
+                  >
+                    ⬆ Upload CSV to Patient
+                  </button>
+                  {!form.patientId && (
+                    <span className="help" style={{ marginLeft: 8 }}>
+                      (Check or create a patient first)
+                    </span>
+                  )}
+                </div>
+                {csvStatus && <div className="help" style={{ marginTop: 6 }}>{csvStatus}</div>}
+              </div>
+            )}
+
             <label className="label">Raw Results Data</label>
             <textarea
               className="input textarea"
@@ -356,8 +420,11 @@ export default function NewLetter() {
             ) : (
               <article className="letter">
                 <h3>Patient Results Letter</h3>
-                <p><strong>Patient:</strong> {form.name || "—"} {form.patientId ? `(${form.patientId})` : ""}</p>
-                <p><strong>Test Type:</strong> {form.testType || "—"}</p>
+                <p>
+                  <strong>Patient:</strong> {form.name || "—"}{" "}
+                  {form.patientId ? `(${form.patientId})` : ""}
+                </p>
+                <p><strong>Data Type:</strong> {form.testType || "—"}</p>
                 <p><strong>Urgency:</strong> {form.urgency}</p>
                 {form.rawData && (
                   <>
@@ -371,6 +438,25 @@ export default function NewLetter() {
                     <p>{form.notes}</p>
                   </>
                 )}
+                {csvResponse?.results?.length ? (
+                  <>
+                    <h4>Uploaded Results (latest batch)</h4>
+                    <ul>
+                      {csvResponse.results.slice(0, 6).map((r, idx) => (
+                        <li key={idx}>
+                          {r.test_name}: {r.value}
+                          {r.unit ? ` ${r.unit}` : ""}{" "}
+                          {r.flag ? `[${r.flag}]` : ""}
+                        </li>
+                      ))}
+                    </ul>
+                    {csvResponse.results.length > 6 && (
+                      <div className="help">
+                        +{csvResponse.results.length - 6} more…
+                      </div>
+                    )}
+                  </>
+                ) : null}
               </article>
             )}
           </div>
