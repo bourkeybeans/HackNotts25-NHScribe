@@ -1,4 +1,5 @@
-from fastapi import FastAPI, Depends, HTTPException, File, UploadFile
+from fastapi import FastAPI, Depends, HTTPException, File, UploadFile, Form
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from models import Base, Patient, Results
@@ -21,8 +22,17 @@ SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 # --- Ensure all tables exist ---
 Base.metadata.create_all(bind=engine)
 
-# --- FastAPI app ---
+# --- FastAPI  ---
 app = FastAPI(title="Pi-Scribe API")
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # React dev server
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def get_db():
     db = SessionLocal()
@@ -34,11 +44,11 @@ def get_db():
 
 @app.post("/patients/")
 def create_patient(
-    name: str,
-    age: int,
-    sex: str = "Other",
-    address: str = "",
-    conditions: str = "",
+    name: str = Form(...),
+    age: int = Form(...),
+    sex: str = Form("Other"),
+    address: str = Form(""),
+    conditions: str = Form(""),
     db: Session = Depends(get_db)
 ):
     patient = Patient(name=name, age=age, sex=sex, address=address, conditions=conditions)
@@ -51,6 +61,26 @@ def create_patient(
 @app.get("/patients/")
 def list_patients(db: Session = Depends(get_db)):
     return db.query(Patient).all()
+
+
+@app.get("/patients/search/")
+def search_patients(
+    name: str = None,
+    age: int = None,
+    sex: str = None,
+    db: Session = Depends(get_db)
+):
+    """Search for patients by name, age, or sex"""
+    query = db.query(Patient)
+    
+    if name:
+        query = query.filter(Patient.name.ilike(f"%{name}%"))
+    if age:
+        query = query.filter(Patient.age == age)
+    if sex:
+        query = query.filter(Patient.sex == sex)
+    
+    return query.all()
 
 
 @app.post("/upload-results/")
