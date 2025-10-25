@@ -212,7 +212,6 @@ def update_letter_status(
     if new_status not in allowed:
         raise HTTPException(status_code=400, detail=f"Invalid status '{new_status}'")
 
-    # ✅ update both status and approval timestamp
     letter.status = new_status
     letter.approved_at = datetime.utcnow() if new_status == "Approved" else None
 
