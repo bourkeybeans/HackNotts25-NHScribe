@@ -166,6 +166,8 @@ export default function NewLetter() {
         throw new Error(msg || `HTTP ${res.status}`);
       }
 
+      console.log(res)
+
       const data = await res.json();
       setCsvResponse(data);
       setCsvStatus(`Uploaded ${csvFile.name} • ${data.results?.length || 0} results saved • batch ${data.batch_id}`);

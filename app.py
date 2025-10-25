@@ -147,7 +147,7 @@ async def upload_results(
     if not results:
         raise HTTPException(status_code=400, detail="No valid result rows found in CSV")
 
-    patient_data = {
+    return {
         "status": "success",
         "batch_id": batch_id,
         "patient": {
