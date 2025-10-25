@@ -1,0 +1,13 @@
+{
+  "name": "nhscribe",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start:backend": "uv run app.py",
+    "start:frontend": "cd front-end && npm start",
+    "start": "concurrently --kill-others-on-fail \"npm run start:backend\" \"npm run start:frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

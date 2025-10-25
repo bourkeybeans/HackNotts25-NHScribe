@@ -4,6 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from models import Base, Patient, Results
 import uuid, csv, io, os
+import uvicorn
 
 # --- Absolute database path ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -171,3 +172,7 @@ async def upload_results(
             for r in results
         ],
     }
+
+
+if __name__ == "__main__":
+    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=True)

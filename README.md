@@ -1,11 +1,11 @@
-ssh -L 11434:127.0.0.1:11434 student@10.249.84.213 Keep this terminal open while you use the Ollama server.
+# NHScribe
 
-This makes localhost:11434 on your Mac point to the Pi's Ollama server.
+### Usage Instructions
 
-Set the environment variable In a new terminal on your Mac, run:
+##### Prerequisites
+- This project uses the uv package manager, which can be installed using pip. To install uv, run the following command:
+`pip install uv`
 
-export OLLAMA_HOST=http://localhost:11434
-
-Run a model from the Pi Now you can call the Ollama model on your Pi:
-
-ollama run tinyllama "Hello via Pi server!"ß
+##### Running the app
+The whole app will can be run using one command. To run the app run the following command
+`npm run start`
