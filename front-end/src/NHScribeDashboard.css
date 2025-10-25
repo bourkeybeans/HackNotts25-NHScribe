@@ -75,3 +75,31 @@ tbody td { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; }
 .badge.danger { background: var(--rose-100); color: #9f1239; }
 
 
+/* Grid for patient inputs (2 cols on wide screens) */
+.patient-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.patient-grid .span-2 { grid-column: span 1; }
+@media (min-width: 768px) {
+  .patient-grid { grid-template-columns: 1fr 1fr; }
+  .patient-grid .span-2 { grid-column: span 2; }
+}
+
+.block-title {
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #0f172a;
+}
+
+.lookup-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 14px;
+}
+
+/* Add a danger pill style using existing badge palette */
+.pill.danger { background: var(--rose-100); color: #9f1239; border: 1px solid #fecdd3; }
