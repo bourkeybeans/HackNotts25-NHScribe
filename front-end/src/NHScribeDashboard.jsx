@@ -3,7 +3,6 @@ import "./NHScribeDashboard.css";
 import Nhscribe from "./assets/Nhscribe.png";
 import { useNavigate } from "react-router-dom";
 
-// --- Status badge with click-to-update ---
 function StatusBadge({ status, letterId, onStatusChange }) {
   const normalized = (status || "").toLowerCase();
 
@@ -39,7 +38,6 @@ function StatusBadge({ status, letterId, onStatusChange }) {
 
       if (!res.ok) throw new Error("Failed to update status");
       const data = await res.json();
-      console.log("✅ Status updated:", data);
       onStatusChange(letterId, data.status, data.approvedAt);
     } catch (err) {
       console.error("❌ Error updating status:", err);
@@ -57,7 +55,6 @@ function StatusBadge({ status, letterId, onStatusChange }) {
   );
 }
 
-// --- UI helpers ---
 function Pill({ label, variant }) {
   return <span className={`pill ${variant || "default"}`}>{label}</span>;
 }
@@ -67,7 +64,6 @@ export default function NHScribeDashboard() {
   const [recentLetters, setRecentLetters] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ updates the local UI immediately
   function handleStatusChange(letterId, newStatus, approvedAt) {
     setRecentLetters((letters) =>
       letters.map((l) =>
@@ -88,7 +84,6 @@ export default function NHScribeDashboard() {
         try {
           data = JSON.parse(text);
         } catch {
-          console.error("❌ Failed to parse JSON");
           data = [];
         }
 
@@ -163,12 +158,10 @@ export default function NHScribeDashboard() {
           <div className="table-scroll">
             {loading ? (
               <div className="table-placeholder">
-                <div className="emoji">⏳</div>
                 <div className="message">Loading recent letters...</div>
               </div>
             ) : recentLetters.length === 0 ? (
               <div className="table-placeholder">
-                <div className="emoji">📭</div>
                 <div className="message">No letters currently need approval.</div>
               </div>
             ) : (
