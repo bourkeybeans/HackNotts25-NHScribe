@@ -1,13 +1,7 @@
-from fastapi import FastAPI
 import os
 import hashlib
 import secrets
 from datetime import date
-
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import LETTER
-from reportlab.lib.units import inch
-from reportlab.lib.utils import simpleSplit
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 LETTERS_DIR = os.path.join(PROJECT_ROOT, "letters")
@@ -16,78 +10,256 @@ LETTERS_DIR = os.path.join(PROJECT_ROOT, "letters")
 os.makedirs(LETTERS_DIR, exist_ok=True)
 
 
-def generate_unique_filename(extension=".pdf"):
+def generate_unique_filename(extension=".html"):
     """Generate a unique hash-based filename that doesn't collide."""
 
     while True:
         # Create a random 16-byte token and hash it
         token = secrets.token_bytes(16)
         hash_name = hashlib.sha256(token).hexdigest()[:12]  # 12-char hash
-        file_name = f"{hash_name}{extension}"
+        file_name = f"letter_{hash_name}{extension}"
         file_path = os.path.join(LETTERS_DIR, file_name)
         if not os.path.exists(file_path):
-            return file_name
+            return file_name, hash_name
 
 
-def create_pdf(patient_name: str, letter_content: str) -> str:
-    """Create a PDF with the word 'Test' and return its filename."""
+def create_pdf(patient_name: str, letter_content: str, doctor_name: str = "Farhan") -> dict:
+    """Create an HTML letter and return its filename and letter_uid."""
 
-    file_name = generate_unique_filename()
+    file_name, letter_uid = generate_unique_filename()
     file_path = os.path.join(LETTERS_DIR, file_name)
 
-    # Create a canvas
-    c = canvas.Canvas(file_path, pagesize=LETTER)
-    width, height = LETTER
-
-    # --- Margins ---
-    left_margin = 1 * inch
-    right_margin = 1 * inch
-    usable_width = width - left_margin - right_margin
-
-    # --- Letterhead / Sender Info ---
-    sender_name = "NHS"
-    sender_address = ["123 Main Street", "Springfield, USA 12345"]
-    c.setFont("Helvetica-Bold", 14)
-    c.drawString(left_margin, height - 1 * inch, sender_name)
-    c.setFont("Helvetica", 11)
-    for i, line in enumerate(sender_address):
-        c.drawString(left_margin, height - (1.2 + i * 0.2) * inch, line)
-
-    # --- Date ---
+    # Generate current date
     today = date.today().strftime("%B %d, %Y")
-    c.drawString(left_margin, height - 2.0 * inch, today)
 
-    # --- Recipient Info ---
-    recipient = patient_name
-    y_position = height - 2.6 * inch
-    c.drawString(left_margin, y_position - 1.3 * inch, f"Dear {recipient},")
+    # Create HTML content
+    html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Letter - {patient_name}</title>
+    <style>
+        body {{
+            font-family: 'Times New Roman', serif;
+            line-height: 1.6;
+            max-width: 8.5in;
+            margin: 0 auto;
+            padding: 1in;
+            background-color: #ffffff;
+            color: #000000;
+        }}
+        
+        .letterhead {{
+            border-bottom: 2px solid #003366;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }}
+        
+        .sender-info {{
+            font-weight: bold;
+            font-size: 18px;
+            color: #003366;
+            margin-bottom: 5px;
+        }}
+        
+        .sender-address {{
+            font-size: 12px;
+            color: #666666;
+            margin-bottom: 10px;
+        }}
+        
+        .date {{
+            font-size: 12px;
+            margin-bottom: 30px;
+        }}
+        
+        .recipient {{
+            margin-bottom: 20px;
+        }}
+        
+        .letter-body {{
+            font-size: 12px;
+            white-space: pre-wrap;
+            margin-bottom: 30px;
+        }}
+        
+        .signature {{
+            margin-top: 40px;
+        }}
+        
+        .signature-line {{
+            margin-bottom: 5px;
+        }}
+        
+        .signature-name {{
+            font-weight: bold;
+        }}
+        
+        .signature-title {{
+            font-style: italic;
+            color: #666666;
+        }}
+        
+        .download-section {{
+            margin-top: 30px;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            text-align: center;
+        }}
+        
+        .download-btn {{
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+            margin: 5px;
+            transition: background-color 0.2s;
+        }}
+        
+        .download-btn:hover {{
+            background: #c82333;
+        }}
+        
+        .download-btn:visited {{
+            color: white;
+        }}
+        
+        /* Editable content styling */
+        .editable {{
+            border: 1px solid transparent;
+            padding: 2px;
+            border-radius: 3px;
+            transition: border-color 0.2s;
+        }}
+        
+        .editable:hover {{
+            border-color: #cccccc;
+        }}
+        
+        .editable:focus {{
+            outline: none;
+            border-color: #007bff;
+            background-color: #f8f9fa;
+        }}
+        
+        /* Print styles */
+        @media print {{
+            body {{
+                margin: 0;
+                padding: 0.5in;
+            }}
+            .download-section {{
+                display: none;
+            }}
+            .editable {{
+                border: none;
+            }}
+            .editable:hover {{
+                border: none;
+            }}
+        }}
+    </style>
+</head>
+<body data-letter-id="{letter_uid}">
+    <div class="letterhead">
+        <div class="sender-info">NHS</div>
+        <div class="sender-address">
+            123 Main Street<br>
+            Springfield, USA 12345
+        </div>
+    </div>
+    
+    <div class="date">{today}</div>
+    
+    <div class="recipient">
+        Dear {patient_name},
+    </div>
+    
+    <div class="letter-body editable" contenteditable="true" id="letter-content">
+{letter_content}
+    </div>
+    
+    <div class="signature">
+        <div class="signature-line">Sincerely,</div>
+        <div class="signature-name">{doctor_name}</div>
+        <div class="signature-title">NHS Medical Professional</div>
+    </div>
+    
+    <div class="download-section">
+        <p><strong>Download Options:</strong></p>
+        <a href="/letters/{letter_uid}/pdf" class="download-btn" target="_blank">
+            📄 Download PDF
+        </a>
+        <button class="download-btn" onclick="window.print()">
+            🖨️ Print Letter
+        </button>
+    </div>
 
-    # --- Body Text (auto-wrap) ---
-    c.setFont("Times-Roman", 12)
-    text_object = c.beginText(left_margin, y_position - 1.8 * inch)
+    <script>
+        // Auto-save functionality
+        let saveTimeout;
+        const letterContent = document.getElementById('letter-content');
+        
+        function autoSave() {{
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {{
+                // Send updated content to server
+                const updatedContent = letterContent.textContent;
+                
+                // Get letter ID from URL or data attribute
+                const letterId = document.body.getAttribute('data-letter-id');
+                if (letterId) {{
+                    fetch(`http://localhost:8000/letters/${{letterId}}/content`, {{
+                        method: 'PUT',
+                        headers: {{
+                            'Content-Type': 'application/json',
+                        }},
+                        body: JSON.stringify({{ content: updatedContent }})
+                    }})
+                    .then(response => response.json())
+                    .then(data => {{
+                        console.log('Auto-saved:', data);
+                    }})
+                    .catch(error => {{
+                        console.error('Auto-save failed:', error);
+                    }});
+                }}
+            }}, 2000); // Save after 2 seconds of inactivity
+        }}
+        
+        // Add event listener for content changes
+        letterContent.addEventListener('input', autoSave);
+        
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {{
+            // Ctrl+S to save
+            if (e.ctrlKey && e.key === 's') {{
+                e.preventDefault();
+                autoSave();
+            }}
+        }});
+    </script>
+</body>
+</html>"""
 
-    # Split letter content into wrapped lines based on usable width
-    for paragraph in letter_content.split("\n"):
-        wrapped_lines = simpleSplit(paragraph, "Times-Roman", 12, usable_width)
-        for line in wrapped_lines:
-            text_object.textLine(line)
-        text_object.textLine("")  # paragraph spacing
+    # Write HTML to file
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.write(html_content)
 
-    c.drawText(text_object)
-
-    # --- Sign-Off ---
-    c.setFont("Times-Roman", 12)
-    c.drawString(left_margin, 1.8 * inch, "Sincerely,")
-    c.setFont("Times-Bold", 12)
-    c.drawString(left_margin, 1.4 * inch, "Farhan")
-    c.setFont("Times-Italic", 12)
-    c.drawString(left_margin, 1.2 * inch, "Unpaid Intern NHS")
-
-    # Save
-    c.save()
-
-    return {"pdf_url": file_name}
+    return {
+        "pdf_url": file_name,
+        "letter_uid": letter_uid,
+        "file_path": file_name
+    }
 
 
 if __name__ == "__main__":
-    print(create_pdf("Benjamin Stacey", "poaijegpioajeiogjopiawjeg"))
+    print(create_pdf("Benjamin Stacey", "This is a test letter content.\n\nThank you for your attention."))

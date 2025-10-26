@@ -402,10 +402,49 @@ def download_letter_pdf(letter_uid: str, db: Session = Depends(get_db)):
 def generate_letter(letter_data: Dict[str, Any] = Body(..., embed=True),
                     db: Session = Depends(get_db)):
     
-    letter_content = generate_letter_content(letter_data)
-    pdf_url = create_pdf(letter_data["patient"]["name"], letter_content)
-
-    return pdf_url
+    # Extract patient info
+    patient_name = letter_data.get("patient", {}).get("name", "Unknown")
+    patient_id = letter_data.get("patient", {}).get("id")
+    doctor_name = letter_data.get("doctor", {}).get("name", "Dr. Smith")
+    details = letter_data.get("details", "")
+    
+    # Validate patient exists
+    if patient_id:
+        patient = db.query(Patient).filter(Patient.id == patient_id).first()
+        if not patient:
+            raise HTTPException(status_code=404, detail="Patient not found")
+    else:
+        raise HTTPException(status_code=400, detail="Patient ID is required")
+    
+    # Generate letter content
+    letter_content = generate_letter_content(letter_data, llama_model="llama3")
+    
+    # Create HTML file
+    result = create_pdf(patient_name, letter_content, doctor_name)
+    
+    # Create letter record in database
+    new_letter = Letter(
+        patient_id=patient_id,
+        doctor_name=doctor_name,
+        details=details,
+        status="Draft",
+        letter_uid=result["letter_uid"],
+        content=letter_content,
+        file_path=result["file_path"]
+    )
+    
+    db.add(new_letter)
+    db.commit()
+    db.refresh(new_letter)
+    
+    return {
+        "status": "success",
+        "letter_uid": new_letter.letter_uid,
+        "file_path": new_letter.file_path,
+        "pdf_url": new_letter.file_path,  # for backward compatibility with frontend
+        "html_url": f"/static/{new_letter.file_path}",
+        "letter_id": new_letter.id
+    }
 
 
 if __name__ == "__main__":

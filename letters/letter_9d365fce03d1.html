@@ -121,6 +121,9 @@
                 margin: 0;
                 padding: 0.5in;
             }
+            .download-section {
+                display: none;
+            }
             .editable {
                 border: none;
             }
@@ -130,7 +133,7 @@
         }
     </style>
 </head>
-<body data-letter-id="16dda341">
+<body data-letter-id="9d365fce03d1">
     <div class="letterhead">
         <div class="sender-info">NHS</div>
         <div class="sender-address">
@@ -139,40 +142,33 @@
         </div>
     </div>
     
-    <div class="date">October 25, 2025</div>
+    <div class="date">October 26, 2025</div>
     
     <div class="recipient">
         Dear Farhan Shaikh,
     </div>
     
     <div class="letter-body editable" contenteditable="true" id="letter-content">
-Haemoglobin Test Results
+Blood Test Results
 
-The haemoglobin test was performed to assess your red blood cell count. The result is as follows:
+A blood test has been carried out to check your Haemoglobin levels.
 
-Haemoglobin: 118 g/L
-Reference range: 115-165 g/L
+Your Haemoglobin level is 118 g/L. The normal range for this test is between 115-165 g/L.
 
-Your haemoglobin level is slightly lower than the normal range, which may indicate that you are not producing enough red blood cells or that your body is losing blood. This could be due to a variety of reasons, including anaemia, infection, or underlying medical conditions.
+The result shows that your Haemoglobin level is slightly low, with a value of 118 g/L. This can occur due to various reasons such as anaemia, blood loss or poor diet. It is essential to consult your doctor to discuss the possible causes and appropriate actions to take.
 
-If you have any concerns about this result, please speak with your doctor or healthcare provider for further guidance and recommendations.
-
-Please note that these results are intended for clinical use only and should not be shared without the patient's consent.
-
-
-
-yoooo
+Please make an appointment with your doctor to review this result further.
     </div>
     
     <div class="signature">
         <div class="signature-line">Sincerely,</div>
-        <div class="signature-name">Farhan</div>
-        <div class="signature-title">Unpaid Intern NHS</div>
+        <div class="signature-name">Dr. Smith</div>
+        <div class="signature-title">NHS Medical Professional</div>
     </div>
     
     <div class="download-section">
         <p><strong>Download Options:</strong></p>
-        <a href="/letters/16dda341/pdf" class="download-btn" target="_blank">
+        <a href="/letters/9d365fce03d1/pdf" class="download-btn" target="_blank">
             📄 Download PDF
         </a>
         <button class="download-btn" onclick="window.print()">
@@ -194,12 +190,12 @@ yoooo
                 // Get letter ID from URL or data attribute
                 const letterId = document.body.getAttribute('data-letter-id');
                 if (letterId) {
-                    fetch(`/letters/${letterId}/content`, {
+                    fetch(`http://localhost:8000/letters/${letterId}/content`, {
                         method: 'PUT',
                         headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'Content-Type': 'application/json',
                         },
-                        body: `content=${encodeURIComponent(updatedContent)}`
+                        body: JSON.stringify({ content: updatedContent })
                     })
                     .then(response => response.json())
                     .then(data => {
