@@ -30,7 +30,7 @@ function StatusBadge({ status, letterId, onStatusChange }) {
         : "Draft";
 
     try {
-      const res = await fetch(`http://10.249.73.28:8000/letters/${letterId}/status`, {
+      const res = await fetch(`http://10.249.84.213:8000/letters/${letterId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ new_status: next }),
@@ -77,7 +77,7 @@ export default function NHScribeDashboard() {
   useEffect(() => {
     async function fetchLetters() {
       try {
-        const res = await fetch("http://10.249.73.28:8000/letters/recent");
+        const res = await fetch("http://10.249.84.213:8000/letters/recent");
         const text = await res.text();
 
         let data;

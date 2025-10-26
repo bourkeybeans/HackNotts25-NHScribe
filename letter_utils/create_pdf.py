@@ -222,7 +222,7 @@ def create_pdf(patient_name: str, letter_content: str, doctor_name: str = "Farha
                 // Get letter ID from URL or data attribute
                 const letterId = document.body.getAttribute('data-letter-id');
                 if (letterId) {{
-                    fetch(`http://10.249.73.28:8000/letters/${{letterId}}/content`, {{
+                    fetch(`http://10.249.84.213:8000/letters/${{letterId}}/content`, {{
                         method: 'PUT',
                         headers: {{
                             'Content-Type': 'application/json',
