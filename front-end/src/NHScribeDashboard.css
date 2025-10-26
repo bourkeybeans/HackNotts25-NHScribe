@@ -197,3 +197,9 @@ tbody td { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; }
   font-weight: 600;
   letter-spacing: 0.2px;
 }
+
+main,
+.page,
+.container {
+  padding-bottom: 60px;  /* adjust to footer height */
+}
