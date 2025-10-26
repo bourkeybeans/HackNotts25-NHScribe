@@ -35,9 +35,15 @@ app = FastAPI(title="Pi-Scribe API")
 app.mount("/static", StaticFiles(directory="letters"), name="static")
 
 # Add CORS middleware
+# Allow access from any origin on the local network for Raspberry Pi deployment
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React dev server
+    allow_origins=[
+        "http://localhost:3000",           # Local React dev server
+        "http://10.249.84.213:3000",       # React app on Pi
+        "http://10.249.84.213:8000",       # Backend on Pi
+        "*"                                 # Allow all origins for local network deployment
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
