@@ -104,7 +104,7 @@ export default function NHScribeDashboard() {
   ).length;
 
   const topStats = [
-    { title: "Current Queue", value: `${draftCount} pending`, icon: "🕒" },
+    { title: "Current Queue", value: `${draftCount} pending`},
   ];
 
   return (
@@ -135,7 +135,6 @@ export default function NHScribeDashboard() {
               <div className="head">{s.title}</div>
               <div className="body">
                 <div className="stat-value">{s.value}</div>
-                <div className="stat-icon">{s.icon}</div>
               </div>
             </div>
           ))}
