@@ -29,6 +29,7 @@ export default function NewLetter() {
   const [csvFile, setCsvFile] = useState(null);
   const [csvStatus, setCsvStatus] = useState("");        // status message
   const [csvResponse, setCsvResponse] = useState(null);  // server JSON on success
+  const [pdfPath, setPdfPath] = useState(null);
 
   const onChange = (e) => {
     const { name, value } = e.target;
@@ -166,8 +167,6 @@ export default function NewLetter() {
         throw new Error(msg || `HTTP ${res.status}`);
       }
 
-      console.log(res)
-
       const data = await res.json();
       setCsvResponse(data);
       setCsvStatus(`Uploaded ${csvFile.name} • ${data.results?.length || 0} results saved • batch ${data.batch_id}`);
@@ -176,6 +175,39 @@ export default function NewLetter() {
       setCsvStatus("Upload failed. Please confirm CSV format and try again.");
     }
   }
+
+  async function handleGenerateLetter() {
+    try {
+
+      if (!csvResponse) {
+        return;
+      }
+
+      const res = await fetch("http://localhost:8000/letters/generate/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          letter_data: csvResponse
+        })
+      });
+
+      if (!res.ok) {
+        const msg = await res.text();
+        throw new Error(msg || `HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+
+      let pdf_path = "http://localhost:8000/static/" + data.pdf_url
+
+      setPdfPath(pdf_path);
+    
+    } catch (err) {
+      console.error(err);
+    }
+      
+  }
+
 
   return (
     <div className="page newletter-page">
@@ -191,7 +223,6 @@ export default function NewLetter() {
               <div className="subtitle">AI Medical Letter Assistant</div>
             </div>
           </div>
-
           <div className="nav-actions">
             <button className="btn" onClick={() => navigate("/")}>⬅ Back</button>
           </div>
@@ -204,8 +235,10 @@ export default function NewLetter() {
           <div className="panel-head">
             <h2>Letter Details</h2>
           </div>
+
           <div className="panel-body">
             <div className="block-title">Patient Search</div>
+
             <div className="patient-grid">
               <div>
                 <label className="label">Name</label>
@@ -306,7 +339,9 @@ export default function NewLetter() {
             />
             <div className="help">Auto-populated from hospital system</div>
 
-            <label className="label" style={{ marginTop: 16 }}>Data Type</label>
+            <label className="label" style={{ marginTop: 16 }}>
+              Data Type
+            </label>
             <div className="select-wrap">
               <select
                 className="input select"
@@ -321,7 +356,6 @@ export default function NewLetter() {
               <span className="select-caret">▾</span>
             </div>
 
-            {/* Text mode */}
             {form.testType === "Text" && (
               <>
                 <label className="label">Raw Results Data</label>
@@ -336,7 +370,6 @@ export default function NewLetter() {
               </>
             )}
 
-            {/* CSV mode */}
             {form.testType === "CSV" && (
               <>
                 <label className="label">Upload CSV Results</label>
@@ -358,11 +391,6 @@ export default function NewLetter() {
                   >
                     ⬆ Upload to Patient
                   </button>
-                  {!form.patientId && (
-                    <span className="help" style={{ marginLeft: 8 }}>
-                      (Check or create a patient first)
-                    </span>
-                  )}
                 </div>
                 {csvStatus && (
                   <div className="help" style={{ marginTop: 8 }}>
@@ -401,7 +429,7 @@ export default function NewLetter() {
             />
 
             <div className="actions">
-              <button className="btn primary" disabled={!form.patientId}>
+              <button className="btn primary" disabled={!form.patientId} onClick={handleGenerateLetter}>
                 Generate Letter
               </button>
               {!form.patientId && (
@@ -420,7 +448,18 @@ export default function NewLetter() {
             <span className="badge chip">Draft</span>
           </div>
           <div className="panel-body preview">
-            {previewEmpty ? (
+            {pdfPath ? (
+              <iframe
+                src={pdfPath}
+                title="Generated Letter"
+                style={{
+                  width: "100%",
+                  height: "80vh",
+                  border: "none",
+                  borderRadius: "8px",
+                }}
+              />
+            ) : previewEmpty ? (
               <div className="preview-empty">
                 <div className="sparkles">✧</div>
                 <div className="muted">Fill in the form to preview your letter</div>
@@ -435,7 +474,6 @@ export default function NewLetter() {
                 <p><strong>Data Type:</strong> {form.testType || "—"}</p>
                 <p><strong>Urgency:</strong> {form.urgency}</p>
 
-                {/* Results area */}
                 {form.testType === "Text" && form.rawData && (
                   <>
                     <h4>Results Summary</h4>
@@ -491,4 +529,5 @@ export default function NewLetter() {
       </main>
     </div>
   );
+
 }

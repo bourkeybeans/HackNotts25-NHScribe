@@ -24,12 +24,13 @@ def generate_letter_content(letter_data: dict, llama_model: str = "llama3.2:1b")
     Sex: {sex}
 
     - Write in the tone and format of a genuine NHS results letter.
-    - Do not address the patient al all.
+    - Do not address the patient at all.
     - Explain the test results in plain, reassuring English.
     - Include test names, results, units, and normal ranges.
     - If a result is 'Low' or 'High', explain possible reasons gently and suggest what to do next.
     - If the result is normal, reassure the patient.
-    - Do not end with a sign-off:
+    - Do not start with a 'Dear XXXX', that will be added in externally.
+    - Do not end with a sign-off - so no 'Yours sincerely etc'
 
     ### Output format:
     Only return the completed letter — no JSON, no code, no notes.

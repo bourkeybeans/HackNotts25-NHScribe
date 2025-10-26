@@ -1,10 +1,16 @@
-from fastapi import FastAPI, Depends, HTTPException, File, UploadFile, Form
+from fastapi import FastAPI, Depends, HTTPException, File, UploadFile, Form, Body
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+
+from typing import List, Dict, Any
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from models import Base, Patient, Results, Letter
 import uuid, csv, io, os
 import uvicorn
+
+from letter_utils.generate_letter_content import generate_letter_content
+from letter_utils.create_pdf import create_pdf
 
 # --- Absolute database path ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -25,6 +31,8 @@ Base.metadata.create_all(bind=engine)
 
 # --- FastAPI  ---
 app = FastAPI(title="Pi-Scribe API")
+
+app.mount("/static", StaticFiles(directory="letters"), name="static")
 
 # Add CORS middleware
 app.add_middleware(
@@ -191,6 +199,16 @@ def get_recent_letters(db: Session = Depends(get_db)):
         }
         for l in letters
     ]
+
+
+@app.post("/letters/generate")
+def generate_letter(letter_data: Dict[str, Any] = Body(..., embed=True),
+                    db: Session = Depends(get_db)):
+    
+    letter_content = generate_letter_content(letter_data)
+    pdf_url = create_pdf(letter_data["patient"]["name"], letter_content)
+
+    return pdf_url
 
 
 if __name__ == "__main__":

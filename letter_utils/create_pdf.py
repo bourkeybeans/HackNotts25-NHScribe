@@ -86,7 +86,7 @@ def create_pdf(patient_name: str, letter_content: str) -> str:
     # Save
     c.save()
 
-    return {"filename": file_name}
+    return {"pdf_url": file_name}
 
 
 if __name__ == "__main__":
