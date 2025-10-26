@@ -15,7 +15,6 @@ class Patient(Base):
     sex = Column(String, CheckConstraint("sex IN ('M','F','Other')"))
     conditions = Column(Text)
 
-    # optional relationships
     results = relationship("Results", back_populates="patient")
     letters = relationship("Letter")
 

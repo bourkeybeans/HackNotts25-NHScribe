@@ -12,32 +12,26 @@ import uvicorn
 from letter_utils.generate_letter_content import generate_letter_content
 from letter_utils.create_pdf import create_pdf
 
-# --- Absolute database path ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATABASE_URL = f"sqlite:///{os.path.join(BASE_DIR, 'scribe.db')}"
 
-# --- Engine with debug logging ---
 engine = create_engine(
     DATABASE_URL,
     connect_args={"check_same_thread": False},
-    echo=False  # set True for debugging SQL statements
+    echo=False  
 )
 
-# --- Session factory ---
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
-# --- Ensure all tables exist ---
 Base.metadata.create_all(bind=engine)
 
-# --- FastAPI  ---
 app = FastAPI(title="Pi-Scribe API")
 
 app.mount("/static", StaticFiles(directory="letters"), name="static")
 
-# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React dev server
+    allow_origins=["http://localhost:3000"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -310,11 +304,9 @@ def download_letter_pdf(letter_uid: str, db: Session = Depends(get_db)):
     if not letter_obj:
         raise HTTPException(status_code=404, detail="Letter not found")
     
-    # Get patient information
     patient = db.query(Patient).filter(Patient.id == letter_obj.patient_id).first()
     patient_name = patient.name if patient else "Unknown"
     
-    # Create a temporary file for the PDF
     temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
     temp_path = temp_file.name
     temp_file.close()
@@ -364,35 +356,28 @@ def download_letter_pdf(letter_uid: str, db: Session = Depends(get_db)):
         story.append(Paragraph(f"Dear {patient_name},", styles['Normal']))
         story.append(Spacer(1, 0.2*inch))
         
-        # Add content
         content = letter_obj.content or "No content available"
-        # Split content into paragraphs
         paragraphs = content.split('\n\n')
         for para in paragraphs:
             if para.strip():
-                # Replace single newlines with <br/> tags
                 para_html = para.replace('\n', '<br/>')
                 story.append(Paragraph(para_html, body_style))
         
         story.append(Spacer(1, 0.4*inch))
         
-        # Add signature
         story.append(Paragraph("Sincerely,", styles['Normal']))
         story.append(Spacer(1, 0.1*inch))
         story.append(Paragraph(f"<b>{letter_obj.doctor_name or 'Unknown'}</b>", styles['Normal']))
         story.append(Paragraph("<i>NHS Medical Professional</i>", address_style))
         
-        # Build PDF
         doc.build(story)
         
-        # Return the PDF file
         return FileResponse(
             temp_path,
             media_type="application/pdf",
             filename=f"letter_{letter_uid}.pdf"
         )
     except Exception as e:
-        # Clean up temp file on error
         if os.path.exists(temp_path):
             os.unlink(temp_path)
         raise HTTPException(status_code=500, detail=f"Failed to generate PDF: {str(e)}")
@@ -402,13 +387,11 @@ def download_letter_pdf(letter_uid: str, db: Session = Depends(get_db)):
 def generate_letter(letter_data: Dict[str, Any] = Body(..., embed=True),
                     db: Session = Depends(get_db)):
     
-    # Extract patient info
     patient_name = letter_data.get("patient", {}).get("name", "Unknown")
     patient_id = letter_data.get("patient", {}).get("id")
     doctor_name = letter_data.get("doctor", {}).get("name", "Dr. Smith")
     details = letter_data.get("details", "")
     
-    # Validate patient exists
     if patient_id:
         patient = db.query(Patient).filter(Patient.id == patient_id).first()
         if not patient:
@@ -416,13 +399,11 @@ def generate_letter(letter_data: Dict[str, Any] = Body(..., embed=True),
     else:
         raise HTTPException(status_code=400, detail="Patient ID is required")
     
-    # Generate letter content
     letter_content = generate_letter_content(letter_data, llama_model="llama3")
     
-    # Create HTML file
     result = create_pdf(patient_name, letter_content, doctor_name)
     
-    # Create letter record in database
+   
     new_letter = Letter(
         patient_id=patient_id,
         doctor_name=doctor_name,
@@ -441,7 +422,7 @@ def generate_letter(letter_data: Dict[str, Any] = Body(..., embed=True),
         "status": "success",
         "letter_uid": new_letter.letter_uid,
         "file_path": new_letter.file_path,
-        "pdf_url": new_letter.file_path,  # for backward compatibility with frontend
+        "pdf_url": new_letter.file_path,
         "html_url": f"/static/{new_letter.file_path}",
         "letter_id": new_letter.id
     }
