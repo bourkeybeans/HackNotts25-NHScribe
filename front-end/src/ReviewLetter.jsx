@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "./ReviewLetter.css";
 import Nhscribe from "./assets/Nhscribe.png";
+import { API_BASE_URL } from "./config";
 
 function Pill({ label, variant }) {
   return <span className={`pill ${variant || "default"}`}>{label}</span>;
@@ -22,7 +23,7 @@ export default function ReviewLetter() {
   useEffect(() => {
     async function fetchLetter() {
       try {
-        const res = await fetch(`http://10.249.84.213:8000/letters/${letterId}`);
+        const res = await fetch(`${API_BASE_URL}/letters/${letterId}`);
         if (!res.ok) {
           throw new Error("Letter not found");
         }
@@ -55,7 +56,7 @@ export default function ReviewLetter() {
     if (!silent) setSaving(true);
     
     try {
-      const res = await fetch(`http://10.249.84.213:8000/letters/${letterId}/content`, {
+      const res = await fetch(`${API_BASE_URL}/letters/${letterId}/content`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -85,7 +86,7 @@ export default function ReviewLetter() {
 
   async function handleDownloadPDF() {
     try {
-      const res = await fetch(`http://10.249.84.213:8000/letters/${letterId}/pdf`);
+      const res = await fetch(`${API_BASE_URL}/letters/${letterId}/pdf`);
       if (!res.ok) throw new Error("Failed to generate PDF");
       
       const blob = await res.blob();
@@ -168,13 +169,13 @@ export default function ReviewLetter() {
               onClick={() => handleSave(false)}
               disabled={saving}
             >
-              {saving ? "Saving..." : "💾 Save"}
+              {saving ? "Saving..." : "Save"}
             </button>
             <button className="btn-secondary" onClick={handlePrint}>
-              🖨️ Print
+              Print
             </button>
             <button className="btn" onClick={handleDownloadPDF}>
-              📄 Download PDF
+              Download PDF
             </button>
           </div>
         </div>
@@ -227,8 +228,9 @@ export default function ReviewLetter() {
             <div className="letterhead">
               <div className="sender-info">NHS</div>
               <div className="sender-address">
-                123 Main Street<br />
-                Springfield, USA 12345
+                Computer Science Building<br />
+                Jubilee Campus<br />
+                University of Nottingham<br />
               </div>
             </div>
 
@@ -274,10 +276,10 @@ export default function ReviewLetter() {
               onClick={() => handleSave(false)}
               disabled={saving}
             >
-              {saving ? "Saving..." : "💾 Save Changes"}
+              {saving ? "Saving..." : "Save Changes"}
             </button>
             <button className="btn" onClick={handleDownloadPDF}>
-              📄 Download PDF
+              Download PDF
             </button>
           </div>
         </div>

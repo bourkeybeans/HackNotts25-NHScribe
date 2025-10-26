@@ -3,6 +3,7 @@ import "./NHScribeDashboard.css";
 import "./NewLetter.css";
 import Nhscribe from "./assets/Nhscribe.png";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "./config";
 
 export default function NewLetter() {
   const navigate = useNavigate();
@@ -53,7 +54,7 @@ export default function NewLetter() {
       setCheckStatus(null);
       setCheckMessage("Checking…");
 
-      const res = await fetch("http://10.249.84.213:8000/patients/");
+      const res = await fetch(`${API_BASE_URL}/patients/`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const patients = await res.json();
 
@@ -111,7 +112,7 @@ export default function NewLetter() {
       body.set("address", form.address?.trim() || "");
       body.set("conditions", form.conditions?.trim() || "");
 
-      const res = await fetch("http://10.249.84.213:8000/patients/", {
+      const res = await fetch(`${API_BASE_URL}/patients/`, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body,
@@ -152,7 +153,7 @@ export default function NewLetter() {
       fd.append("patient_id", String(Number(form.patientId)));
       fd.append("file", csvFile);
 
-      const res = await fetch("http://10.249.84.213:8000/upload-results/", {
+      const res = await fetch(`${API_BASE_URL}/upload-results/`, {
         method: "POST",
         body: fd,
       });
@@ -178,7 +179,7 @@ export default function NewLetter() {
         return;
       }
 
-      const res = await fetch("http://10.249.84.213:8000/letters/generate/", {
+      const res = await fetch(`${API_BASE_URL}/letters/generate/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -193,7 +194,7 @@ export default function NewLetter() {
 
       const data = await res.json();
 
-      let pdf_path = "http://10.249.84.213:8000/static/" + data.pdf_url
+      let pdf_path = `${API_BASE_URL}/static/${data.pdf_url}`;
 
       setPdfPath(pdf_path);
     

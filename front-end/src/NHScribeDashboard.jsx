@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import "./NHScribeDashboard.css";
 import Nhscribe from "./assets/Nhscribe.png";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "./config";
 
 function StatusBadge({ status, letterId, onStatusChange }) {
   const normalized = (status || "").toLowerCase();
@@ -30,7 +31,7 @@ function StatusBadge({ status, letterId, onStatusChange }) {
         : "Draft";
 
     try {
-      const res = await fetch(`http://10.249.84.213:8000/letters/${letterId}/status`, {
+      const res = await fetch(`${API_BASE_URL}/letters/${letterId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ new_status: next }),
@@ -77,7 +78,7 @@ export default function NHScribeDashboard() {
   useEffect(() => {
     async function fetchLetters() {
       try {
-        const res = await fetch("http://10.249.84.213:8000/letters/recent");
+        const res = await fetch(`${API_BASE_URL}/letters/recent`);
         const text = await res.text();
 
         let data;
@@ -169,7 +170,7 @@ export default function NHScribeDashboard() {
                   <tr>
                     <th>Letter ID</th>
                     <th>Patient ID</th>
-                    <th>Doctor Name</th>
+            
                     <th>Status</th>
                     <th>Details</th>
                     <th>Time</th>
@@ -183,7 +184,6 @@ export default function NHScribeDashboard() {
                     <tr key={row.id}>
                       <td className="bold">{row.id}</td>
                       <td>{row.patientId}</td>
-                      <td>{row.doctorName}</td>
                       <td>
                         <StatusBadge
                           status={row.status}
@@ -208,7 +208,7 @@ export default function NHScribeDashboard() {
                           onClick={() => navigate(`/review/${row.id}`)}
                           title="Review and edit letter"
                         >
-                          📝 Review
+                          Review
                         </button>
                       </td>
                     </tr>
