@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import NHScribeDashboard from "./NHScribeDashboard";
 import NewLetter from "./NewLetter";
+import ReviewLetter from "./ReviewLetter";
 import Footer from "./Footer";
 
 function App() {
@@ -11,6 +12,7 @@ function App() {
         <Routes>
           <Route path="/" element={<NHScribeDashboard />} />
           <Route path="/new-letter" element={<NewLetter />} />
+          <Route path="/review/:letterId" element={<ReviewLetter />} />
         </Routes>
         <Footer />
       </div>
