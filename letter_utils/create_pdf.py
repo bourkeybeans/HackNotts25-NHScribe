@@ -42,6 +42,7 @@ def create_pdf(patient_name: str, letter_content: str, doctor_name: str = "Farha
     <style>
         body {{
             font-family: 'Times New Roman', serif;
+            font-size: 12pt;
             line-height: 1.6;
             max-width: 8.5in;
             margin: 0 auto;
@@ -58,34 +59,36 @@ def create_pdf(patient_name: str, letter_content: str, doctor_name: str = "Farha
         
         .sender-info {{
             font-weight: bold;
-            font-size: 18px;
+            font-size: 14pt;
             color: #003366;
             margin-bottom: 5px;
         }}
         
         .sender-address {{
-            font-size: 12px;
+            font-size: 10pt;
             color: #666666;
             margin-bottom: 10px;
         }}
         
         .date {{
-            font-size: 12px;
+            font-size: 12pt;
             margin-bottom: 30px;
         }}
         
         .recipient {{
             margin-bottom: 20px;
+            font-size: 12pt;
         }}
         
         .letter-body {{
-            font-size: 12px;
+            font-size: 12pt;
             white-space: pre-wrap;
             margin-bottom: 30px;
         }}
         
         .signature {{
             margin-top: 40px;
+            font-size: 12pt;
         }}
         
         .signature-line {{
@@ -99,6 +102,7 @@ def create_pdf(patient_name: str, letter_content: str, doctor_name: str = "Farha
         .signature-title {{
             font-style: italic;
             color: #666666;
+            font-size: 11pt;
         }}
         
         .download-section {{
@@ -108,6 +112,7 @@ def create_pdf(patient_name: str, letter_content: str, doctor_name: str = "Farha
             border: 1px solid #e9ecef;
             border-radius: 5px;
             text-align: center;
+            font-size: 12pt;
         }}
         
         .download-btn {{
@@ -117,7 +122,7 @@ def create_pdf(patient_name: str, letter_content: str, doctor_name: str = "Farha
             padding: 10px 20px;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 12pt;
             text-decoration: none;
             display: inline-block;
             margin: 5px;
