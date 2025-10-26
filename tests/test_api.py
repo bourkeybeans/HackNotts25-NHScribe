@@ -5,7 +5,7 @@ Test script to verify API endpoints are working
 import requests
 import json
 
-BASE_URL = "http://localhost:8000"
+BASE_URL = "http://10.249.73.28:8000"
 
 def test_api():
     print("🧪 Testing NHScribe API Endpoints")
@@ -65,7 +65,7 @@ def test_api():
         
     except requests.exceptions.ConnectionError:
         print("❌ Could not connect to API server.")
-        print("   Make sure the backend is running on http://localhost:8000")
+        print("   Make sure the backend is running on http://10.249.73.28:8000")
         print("   Run: uvicorn app:app --reload")
     except Exception as e:
         print(f"❌ Error: {e}")
