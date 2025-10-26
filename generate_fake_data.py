@@ -225,7 +225,6 @@ def generate_letter_content(test_type):
         'k': round(random.uniform(3.3, 5.3), 1)
     }
     
-    # Determine interpretation based on values
     result_category = random.choices(['normal', 'borderline', 'abnormal'], weights=[60, 30, 10])[0]
     interpretation = random.choice(INTERPRETATIONS[result_category])
     values['interpretation'] = interpretation
@@ -233,7 +232,6 @@ def generate_letter_content(test_type):
     try:
         content = template.format(**values)
     except KeyError:
-        # If template doesn't match, use a generic one
         content = f"{test_type} Results\n\nYour recent {test_type.lower()} test has been completed.\n\n{interpretation}\n\nPlease contact your GP if you have any questions."
     
     return content
@@ -249,7 +247,6 @@ def create_fake_data(num_patients=10, letters_per_patient_range=(1, 3)):
     total_letters = 0
     
     for i in range(num_patients):
-        # Create patient
         patient = generate_patient()
         
         cursor.execute("""
@@ -277,17 +274,14 @@ def create_fake_data(num_patients=10, letters_per_patient_range=(1, 3)):
                 weights=[50, 40, 10]
             )[0]
             
-            # Random date in the last 30 days
             days_ago = random.randint(0, 30)
             created_at = datetime.now() - timedelta(days=days_ago)
             
-            # If approved, set approved_at to a few hours after created_at
             approved_at = None
             if status == 'Approved':
                 hours_later = random.randint(1, 24)
                 approved_at = created_at + timedelta(hours=hours_later)
             
-            # Generate letter content
             content = generate_letter_content(test_type)
             
             cursor.execute("""
