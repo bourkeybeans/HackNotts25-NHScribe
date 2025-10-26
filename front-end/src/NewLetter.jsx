@@ -34,7 +34,6 @@ export default function NewLetter() {
   const onChange = (e) => {
     const { name, value } = e.target;
     setForm((f) => ({ ...f, [name]: value }));
-    // Reset CSV preview if switching data type
     if (name === "testType" && value !== "CSV") {
       setCsvFile(null);
       setCsvResponse(null);
@@ -43,15 +42,12 @@ export default function NewLetter() {
   };
 
   const previewEmpty = useMemo(() => {
-    // If CSV is selected, preview is empty until we have a server response
     if (form.testType === "CSV") return !csvResponse && !form.notes;
-    // Text mode uses rawData/notes
     return !form.testType && !form.rawData && !form.notes;
   }, [form, csvResponse]);
 
   const norm = (s) => (s || "").trim().toLowerCase();
 
-  // ---- Patient lookup ----
   async function handleCheckPatient() {
     try {
       setCheckStatus(null);
@@ -95,7 +91,6 @@ export default function NewLetter() {
     }
   }
 
-  // ---- Create new patient ----
   async function handleCreatePatient() {
     if (!form.name?.trim()) {
       setCheckStatus("error");
