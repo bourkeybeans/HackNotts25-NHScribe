@@ -8,7 +8,7 @@ import uuid
 from datetime import datetime, timedelta
 import random
 
-# Fake data pools
+# Fake data 
 FIRST_NAMES = [
     "James", "Mary", "John", "Patricia", "Robert", "Jennifer", "Michael", "Linda",
     "William", "Elizabeth", "David", "Barbara", "Richard", "Susan", "Joseph", "Jessica",
