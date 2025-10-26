@@ -40,8 +40,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",           # Local React dev server
-        "http://10.249.84.213:3000",       # React app on Pi
-        "http://10.249.84.213:8000",       # Backend on Pi
+        "http://10.249.82.165:3000",       # React app on Pi
+        "http://10.249.82.165:8000",       # Backend on Pi
         "*"                                 # Allow all origins for local network deployment
     ],
     allow_credentials=True,
@@ -358,7 +358,7 @@ def download_letter_pdf(letter_uid: str, db: Session = Depends(get_db)):
         
         # Add letterhead
         story.append(Paragraph("NHS", header_style))
-        story.append(Paragraph("123 Main Street<br/>Springfield, USA 12345", address_style))
+        story.append(Paragraph("Computer Science Building<br /> Jubilee Campus<br /> University of Nottingham<br />", address_style))
         story.append(Spacer(1, 0.2*inch))
         
         # Add date

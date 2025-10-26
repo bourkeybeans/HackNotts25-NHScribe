@@ -116,7 +116,7 @@ def create_pdf(patient_name: str, letter_content: str, doctor_name: str = "Farha
         }}
         
         .download-btn {{
-            background: #dc3545;
+            background: #1aa4af;
             color: white;
             border: none;
             padding: 10px 20px;
@@ -177,8 +177,9 @@ def create_pdf(patient_name: str, letter_content: str, doctor_name: str = "Farha
     <div class="letterhead">
         <div class="sender-info">NHS</div>
         <div class="sender-address">
-            123 Main Street<br>
-            Springfield, USA 12345
+            Computer Science Building<br />
+            Jubilee Campus<br />
+            University of Nottingham<br />
         </div>
     </div>
     
@@ -201,10 +202,10 @@ def create_pdf(patient_name: str, letter_content: str, doctor_name: str = "Farha
     <div class="download-section">
         <p><strong>Download Options:</strong></p>
         <a href="/letters/{letter_uid}/pdf" class="download-btn" target="_blank">
-            📄 Download PDF
+            Download PDF
         </a>
         <button class="download-btn" onclick="window.print()">
-            🖨️ Print Letter
+            Print Letter
         </button>
     </div>
 
@@ -222,7 +223,7 @@ def create_pdf(patient_name: str, letter_content: str, doctor_name: str = "Farha
                 // Get letter ID from URL or data attribute
                 const letterId = document.body.getAttribute('data-letter-id');
                 if (letterId) {{
-                    fetch(`http://10.249.84.213:8000/letters/${{letterId}}/content`, {{
+                    fetch(`http://10.249.82.165:8000/letters/${{letterId}}/content`, {{
                         method: 'PUT',
                         headers: {{
                             'Content-Type': 'application/json',

@@ -169,13 +169,13 @@ export default function ReviewLetter() {
               onClick={() => handleSave(false)}
               disabled={saving}
             >
-              {saving ? "Saving..." : "💾 Save"}
+              {saving ? "Saving..." : "Save"}
             </button>
             <button className="btn-secondary" onClick={handlePrint}>
-              🖨️ Print
+              Print
             </button>
             <button className="btn" onClick={handleDownloadPDF}>
-              📄 Download PDF
+              Download PDF
             </button>
           </div>
         </div>
@@ -228,8 +228,9 @@ export default function ReviewLetter() {
             <div className="letterhead">
               <div className="sender-info">NHS</div>
               <div className="sender-address">
-                123 Main Street<br />
-                Springfield, USA 12345
+                Computer Science Building<br />
+                Jubilee Campus<br />
+                University of Nottingham<br />
               </div>
             </div>
 
@@ -275,10 +276,10 @@ export default function ReviewLetter() {
               onClick={() => handleSave(false)}
               disabled={saving}
             >
-              {saving ? "Saving..." : "💾 Save Changes"}
+              {saving ? "Saving..." : "Save Changes"}
             </button>
             <button className="btn" onClick={handleDownloadPDF}>
-              📄 Download PDF
+              Download PDF
             </button>
           </div>
         </div>

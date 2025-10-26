@@ -170,7 +170,7 @@ export default function NHScribeDashboard() {
                   <tr>
                     <th>Letter ID</th>
                     <th>Patient ID</th>
-                    <th>Doctor Name</th>
+            
                     <th>Status</th>
                     <th>Details</th>
                     <th>Time</th>
@@ -184,7 +184,6 @@ export default function NHScribeDashboard() {
                     <tr key={row.id}>
                       <td className="bold">{row.id}</td>
                       <td>{row.patientId}</td>
-                      <td>{row.doctorName}</td>
                       <td>
                         <StatusBadge
                           status={row.status}
@@ -209,7 +208,7 @@ export default function NHScribeDashboard() {
                           onClick={() => navigate(`/review/${row.id}`)}
                           title="Review and edit letter"
                         >
-                          📝 Review
+                          Review
                         </button>
                       </td>
                     </tr>
