@@ -40,7 +40,7 @@ function StatusBadge({ status, letterId, onStatusChange }) {
       const data = await res.json();
       onStatusChange(letterId, data.status, data.approvedAt);
     } catch (err) {
-      console.error("❌ Error updating status:", err);
+      console.error("Error updating status:", err);
     }
   }
 
@@ -89,7 +89,7 @@ export default function NHScribeDashboard() {
 
         setRecentLetters(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.error("🚨 Fetch error:", err);
+        console.error("Fetch error:", err);
         setRecentLetters([]);
       } finally {
         setLoading(false);
