@@ -1,4 +1,9 @@
-# NHScribe
+## NHScribe
+
+An on-site, privacy-preserving letter generator for NHS patient results built at HackNotts 2025.  
+Runs locally on Raspberry Pi for full data security.
+
+[View our project on Devpost](https://devpost.com/software/nhscribe?ref_content=my-projects-tab&ref_feature=my_projects)
 
 ### Usage Instructions
 
